@@ -134,6 +134,42 @@ curl -s -X PUT 'https://dragon-boat-race-default-rtdb.asia-southeast1.firebaseda
 
 測試結果成功，代表 Realtime Database URL 與 Rules 當時允許寫入。
 
+最近 QA 也確認：
+
+- 可建立 Firebase 臨時房間。
+- 可讀回玩家、分隊、按擊、位置與勝利隊伍資料。
+- `increment()` server-side 累加可正常使用。
+- 測試房間已於測試後刪除。
+
+## GitHub 部署現況
+
+GitHub repo：
+
+```text
+https://github.com/jesuswaytaipeisrv/dragon-boat-race
+```
+
+GitHub Pages：
+
+```text
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+```
+
+固定測試房間：
+
+```text
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
+```
+
+目前 `main` 與 `gh-pages` 都指向最新 commit：
+
+```text
+76befec Reduce multiplayer sync lag
+```
+
+因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。部署後確認 GitHub Pages 回 `200 OK`。
+
 ## 建議 Database Rules
 
 目前活動測試可以先用寬鬆規則：
@@ -181,6 +217,21 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 
 正式部署到 GitHub Pages 後，就不需要本機 IP。
 
+最近完成的自動化測試：
+
+- `node --check app.js` 通過。
+- GitHub Pages 首頁引用 `app.js?v=20260613-4`。
+- 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
+- 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
+- DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
+- Firebase 臨時房間完整資料流程測試通過。
+
+目前自動化環境限制：
+
+- 本機沒有 Playwright、Puppeteer 或 jsdom。
+- Chrome 沒有可用的 Codex Chrome Extension。
+- 因此尚未用自動化瀏覽器實際點完 UI；正式活動前仍建議用 2-3 支手機跑一輪掃 QR、加入、分隊、開始、按擊與重設。
+
 最近使用過的測試房間：
 
 - `MXOU`
@@ -223,10 +274,17 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
    ```html
    <link rel="stylesheet" href="./styles.css?v=20260613-2" />
-   <script type="module" src="./app.js?v=20260613-3"></script>
+   <script type="module" src="./app.js?v=20260613-4"></script>
    ```
 
-7. 推 GitHub 前建議更新本文件與 `USER_GUIDE.md`，讓活動操作紀錄保持最新。
+7. 推 GitHub 後若 Pages 使用 `gh-pages` 分支，請同步推：
+
+   ```bash
+   git push origin main
+   git push origin main:gh-pages
+   ```
+
+8. 推 GitHub 前建議更新本文件與 `USER_GUIDE.md`，讓活動操作紀錄保持最新。
 
 ## 待辦建議
 
@@ -235,6 +293,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - 加入主持人房間清除功能，避免測試資料累積。
 - 增加遊戲時間制，例如 30 秒倒數結束後用距離排名。
 - 增加多人壓力測試。
+- 若現場人數很多仍 lag，進一步把 Firebase listener 拆成房間狀態與玩家統計，並讓主持畫面局部更新而不是整段重畫。
 - 手機端可以加震動回饋 `navigator.vibrate`，但需注意瀏覽器支援度。
 - 增加「固定活動房間」設定，例如預設 `room=DRAGON`，讓玩家只需輸入名字。
 - 增加可選的音效或終點慶祝畫面。

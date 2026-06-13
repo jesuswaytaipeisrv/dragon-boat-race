@@ -65,6 +65,19 @@ http://127.0.0.1:5173/?view=join&room=MXOU
 
 正式活動不要依賴開發電腦的 `127.0.0.1` 或區網 IP。請把專案部署到 GitHub Pages。
 
+目前已部署網址：
+
+```text
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+```
+
+固定房間 `DRAGON` 可直接使用：
+
+```text
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
+```
+
 活動當天：
 
 1. 主持人用現場電腦開 GitHub Pages 網址：
@@ -97,7 +110,16 @@ https://你的帳號.github.io/你的repo名稱/?view=join&room=DRAGON
 
 ## GitHub Pages 部署
 
-最簡單做法：讓 `dragon-boat-race` 內的檔案成為 GitHub repo 根目錄。
+目前已部署到：
+
+```text
+https://github.com/jesuswaytaipeisrv/dragon-boat-race
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+```
+
+目前使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 都在最新 commit。
+
+若要從零重新部署，最簡單做法是讓 `dragon-boat-race` 內的檔案成為 GitHub repo 根目錄。
 
 ```bash
 cd /Users/garyhuang/Documents/Codex/2026-06-13/github/dragon-boat-race
@@ -115,7 +137,7 @@ git push -u origin main
 2. `Pages`
 3. `Build and deployment`
 4. Source 選 `Deploy from a branch`
-5. Branch 選 `main`
+5. Branch 選 `main` 或 `gh-pages`
 6. Folder 選 `/root`
 7. 儲存
 
@@ -133,6 +155,14 @@ https://你的帳號.github.io/你的repo名稱/?view=host&room=TEST
 
 ```text
 https://你的帳號.github.io/你的repo名稱/?view=join&room=TEST
+```
+
+本專案目前部署後快速檢查：
+
+```bash
+curl -I https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+curl -I "https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON"
+curl -I "https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON"
 ```
 
 ## Firebase 設定
@@ -196,6 +226,33 @@ const app = initializeApp(firebaseConfig);
 3. 等主持人分隊。
 4. 比賽開始後一直按「划！」。
 
+## 效能與 lag
+
+目前已做一版多人連按 lag 初步優化：
+
+- 玩家手機按鈕會立即有本機回饋。
+- 玩家按擊會批次送到 Firebase，降低多人同時連按時的寫入壓力。
+- 主持畫面龍舟位置更新節奏略降，避免所有裝置收到過高頻率的房間同步。
+
+若現場仍覺得 lag，建議先確認：
+
+- 現場 Wi-Fi 與行動網路是否穩定。
+- 玩家是否都使用 GitHub Pages 網址，不要混用本機網址或舊部署。
+- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260613-4` 或重新掃 QR code。
+- 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
+
+## 測試紀錄
+
+最近完成的自動化檢查：
+
+- `node --check app.js` 通過。
+- GitHub Pages 首頁、主持頁與加入頁 URL 回 `200`。
+- 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 都可載入。
+- Firebase 臨時房間流程測試通過：建立房間、玩家資料、分隊、按擊統計、結束比賽與刪除測試房間。
+- Firebase `increment()` 實際寫入測試通過。
+
+仍建議正式活動前用 2-3 支手機實際跑一次掃 QR、加入、開始、按擊與重設流程。
+
 ## 畫面特色
 
 - 三隊顏色：紅隊、藍隊、綠隊。
@@ -255,7 +312,7 @@ JavaScript：
 CSS：
 
 ```html
-<link rel="stylesheet" href="./styles.css?v=20260613-3" />
+<link rel="stylesheet" href="./styles.css?v=20260613-2" />
 ```
 
 或在瀏覽器做 hard reload。

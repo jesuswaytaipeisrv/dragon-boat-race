@@ -4,12 +4,35 @@
 
 ## 目前狀態
 
-- 已可本機執行，並可部署到 GitHub Pages。
+- 已可本機執行，並已部署到 GitHub Pages。
 - 已接上 Firebase Realtime Database。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
 - 龍舟包含船頭卡通人物、船身划船小人與移動浪花效果。
+- 已做多人連按 lag 初步優化，降低 Firebase 寫入頻率。
+- 已完成自動化 smoke test、Firebase 讀寫流程測試與部署資源檢查。
 - 專案不需要 npm install 或 build。
+
+## 線上網址
+
+GitHub repo：
+
+```text
+https://github.com/jesuswaytaipeisrv/dragon-boat-race
+```
+
+GitHub Pages：
+
+```text
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+```
+
+固定測試房間：
+
+```text
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON
+https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
+```
 
 ## 文件
 
@@ -80,12 +103,14 @@ export const firebaseConfig = {
 
 ## GitHub Pages
 
-最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
+目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
+
+若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 
 1. 把檔案 commit 到 GitHub。
 2. 到 repo 的 Settings > Pages。
 3. Source 選 `Deploy from a branch`。
-4. Branch 選 `main`，資料夾選 `/root`。
+4. Branch 選 `main` 或 `gh-pages`，資料夾選 `/root`。
 5. 儲存後等 GitHub Pages 產生網址。
 
 如果你想保留子資料夾結構，可以改用 GitHub Actions 部署該資料夾。
@@ -110,4 +135,10 @@ python3 -m http.server 5173
 
 ```text
 http://127.0.0.1:5173/?view=host
+```
+
+部署後也可快速檢查：
+
+```bash
+curl -I https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 ```
