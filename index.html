@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>龍舟衝刺</title>
+    <link rel="stylesheet" href="./styles.css?v=20260613-2" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="回到首頁">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>龍舟衝刺</span>
+        </a>
+        <nav class="mode-switch" aria-label="模式切換">
+          <a id="hostLink" href="?view=host">主持</a>
+          <a id="joinLink" href="?view=join">加入</a>
+        </nav>
+      </header>
+
+      <main id="screen" class="screen" aria-live="polite"></main>
+    </div>
+
+    <template id="hostTemplate">
+      <section class="host-layout">
+        <aside class="control-panel">
+          <div class="panel-head">
+            <p class="label">房間</p>
+            <h1 id="roomCodeTitle">---</h1>
+          </div>
+
+          <div class="join-card">
+            <img id="qrCode" alt="加入房間 QR code" />
+            <div>
+              <p class="label">玩家加入網址</p>
+              <p id="joinUrl" class="join-url"></p>
+            </div>
+          </div>
+
+          <div class="host-actions">
+            <button id="copyJoinUrl" class="button secondary" type="button">複製網址</button>
+            <button id="shuffleTeams" class="button secondary" type="button">隨機分隊</button>
+            <button id="startRace" class="button primary" type="button">開始比賽</button>
+            <button id="resetRace" class="button danger" type="button">重設比賽</button>
+          </div>
+
+          <div class="settings">
+            <label>
+              賽道長度
+              <input id="raceLength" type="range" min="60" max="180" step="10" value="100" />
+            </label>
+            <output id="raceLengthValue">100 公尺</output>
+          </div>
+
+          <div>
+            <p class="label">參加者</p>
+            <ul id="playerList" class="player-list"></ul>
+          </div>
+        </aside>
+
+        <section class="race-stage" aria-label="龍舟賽道">
+          <div class="race-status">
+            <div>
+              <p id="statusLabel" class="label">等待玩家加入</p>
+              <h2 id="raceHeadline">準備開賽</h2>
+            </div>
+            <div id="countdown" class="countdown"></div>
+          </div>
+
+          <div id="lanes" class="lanes"></div>
+          <div id="results" class="results" hidden></div>
+        </section>
+      </section>
+    </template>
+
+    <template id="joinTemplate">
+      <section class="join-layout">
+        <div class="join-panel">
+          <p class="label">加入龍舟賽</p>
+          <h1>輸入名字後上船</h1>
+          <form id="joinForm" class="join-form">
+            <label>
+              房間碼
+              <input id="roomCodeInput" name="room" inputmode="latin" autocomplete="off" required />
+            </label>
+            <label>
+              你的名字
+              <input id="playerNameInput" name="name" autocomplete="name" maxlength="16" required />
+            </label>
+            <button class="button primary" type="submit">加入遊戲</button>
+          </form>
+          <p id="joinHint" class="hint"></p>
+        </div>
+      </section>
+    </template>
+
+    <template id="playerTemplate">
+      <section id="playerScreen" class="player-screen">
+        <div class="player-top">
+          <div>
+            <p class="label">你的隊伍</p>
+            <h1 id="playerTeam">等待分隊</h1>
+          </div>
+          <div id="playerStatus" class="status-pill">等待</div>
+        </div>
+
+        <button id="paddleButton" class="paddle-button" type="button" disabled>
+          <span>划！</span>
+        </button>
+
+        <div class="player-stats">
+          <div>
+            <p class="label">你的按擊</p>
+            <strong id="playerClicks">0</strong>
+          </div>
+          <div>
+            <p class="label">全隊按擊</p>
+            <strong id="teamClicks">0</strong>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <script type="module" src="./app.js?v=20260613-3"></script>
+  </body>
+</html>
