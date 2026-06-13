@@ -107,6 +107,16 @@
    - `styles.css`：定義 `.wake`、`.wake span` 與 `@keyframes wakePulse`。
    - `index.html`：`styles.css` 加上版本參數，避免瀏覽器快取舊 CSS。
 
+6. 多人遊玩 lag 初步優化
+
+   實際手機多人連按時，主要壓力來自玩家端高頻率寫入 Firebase。原本每 240ms 送出一次，且每次使用兩個 transaction 更新總按擊與最近按擊桶。現在改成：
+
+   - 玩家端每 650ms 批次送出一次，手機按鈕仍保留即時本機回饋。
+   - 最近按擊統計桶由 500ms 改為 1000ms，降低資料節點變動頻率。
+   - Firebase 寫入由兩次 transaction 改為一次 multi-location `increment()` update。
+   - 主持端龍舟位置更新由 400ms 調整為 500ms，降低全房間同步更新量。
+   - `index.html` 的 `app.js` 版本參數更新，避免手機瀏覽器吃舊版。
+
 ## Firebase 現況
 
 目前 `firebase-config.js` 已填入 Firebase 專案設定，包含：

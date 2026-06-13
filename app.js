@@ -15,7 +15,9 @@ const STATUS_LABELS = {
 
 const FINISH_X = 92;
 const SPEED_WINDOW_MS = 3000;
-const FLUSH_MS = 240;
+const RECENT_BUCKET_MS = 1000;
+const FLUSH_MS = 650;
+const RACE_TICK_MS = 500;
 
 const params = new URLSearchParams(window.location.search);
 const view = params.get("view") || "host";
@@ -353,7 +355,7 @@ function runRaceTicker(roomCode) {
     }
 
     await store.updateRoom(roomCode, { positions: nextPositions });
-  }, 400);
+  }, RACE_TICK_MS);
 }
 
 function syncHostTimers(roomCode) {
@@ -468,7 +470,7 @@ async function createFirebaseStore() {
     update,
     get,
     child,
-    runTransaction
+    increment
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js");
 
   const app = initializeApp(firebaseConfig);
@@ -496,11 +498,13 @@ async function createFirebaseStore() {
     },
     addClicks(roomCode, id, count) {
       const now = Date.now();
-      const bucket = String(Math.floor(now / 500) * 500);
-      return Promise.all([
-        runTransaction(ref(db, `rooms/${roomCode}/players/${id}/clicks`), (value) => (value || 0) + count),
-        runTransaction(ref(db, `rooms/${roomCode}/players/${id}/recent/${bucket}`), (value) => (value || 0) + count)
-      ]);
+      const bucket = String(Math.floor(now / RECENT_BUCKET_MS) * RECENT_BUCKET_MS);
+      const staleBucket = String(Math.floor((now - SPEED_WINDOW_MS * 2) / RECENT_BUCKET_MS) * RECENT_BUCKET_MS);
+      return update(ref(db, `rooms/${roomCode}/players/${id}`), {
+        clicks: increment(count),
+        [`recent/${bucket}`]: increment(count),
+        [`recent/${staleBucket}`]: null
+      });
     }
   };
 }
@@ -538,7 +542,7 @@ function createLocalStore() {
       const room = getLocalRoom(roomCode);
       const player = room.players[id];
       if (!player) return;
-      const bucket = String(Math.floor(Date.now() / 500) * 500);
+      const bucket = String(Math.floor(Date.now() / RECENT_BUCKET_MS) * RECENT_BUCKET_MS);
       player.clicks = (player.clicks || 0) + count;
       player.recent = player.recent || {};
       player.recent[bucket] = (player.recent[bucket] || 0) + count;
