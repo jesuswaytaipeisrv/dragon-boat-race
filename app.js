@@ -16,7 +16,7 @@ const STATUS_LABELS = {
 const FINISH_X_PERCENT = 92;
 const SPEED_WINDOW_MS = 3000;
 const RECENT_BUCKET_MS = 1000;
-const FLUSH_MS = 650;
+const FLUSH_MS = 420;
 const RACE_TICK_MS = 500;
 
 const params = new URLSearchParams(window.location.search);
@@ -390,13 +390,13 @@ function runRaceTicker(roomCode) {
       const boost = pace > 0 ? Math.min(3, pace * 0.85) : 0;
       const nextPosition = Math.min(finishDistance, (nextPositions[team.id] || 0) + boost);
       nextPositions[team.id] = nextPosition;
-      if (nextPosition >= finishDistance) {
+    if (nextPosition >= finishDistance) {
         finishers.push({ id: team.id, speed: stats.speed, clicks: stats.clicks });
       }
     });
 
     if (finishers.length) {
-      finishers.sort((a, b) => b.speed - a.speed || b.clicks - a.clicks || teamOrder(a.id) - teamOrder(b.id));
+      finishers.sort((a, b) => b.clicks - a.clicks || b.speed - a.speed || teamOrder(a.id) - teamOrder(b.id));
       await store.updateRoom(roomCode, {
         positions: nextPositions,
         status: "finished",
@@ -737,14 +737,15 @@ function teamOrder(teamId) {
 function getRaceRanking(roomState, teamStats) {
   const ranking = TEAMS
     .map((team) => ({ ...team, position: roomState.positions[team.id] || 0, clicks: teamStats[team.id].clicks }))
-    .sort((a, b) => b.position - a.position || b.clicks - a.clicks || teamOrder(a.id) - teamOrder(b.id));
+    .sort(
+      (a, b) =>
+        b.position - a.position ||
+        b.clicks - a.clicks ||
+        Number(b.id === roomState.winner) - Number(a.id === roomState.winner) ||
+        teamOrder(a.id) - teamOrder(b.id)
+    );
 
-  if (!roomState.winner) return ranking;
-
-  const winner = ranking.find((team) => team.id === roomState.winner);
-  if (!winner) return ranking;
-
-  return [winner, ...ranking.filter((team) => team.id !== roomState.winner)];
+  return ranking;
 }
 
 function headlineForState(roomState) {

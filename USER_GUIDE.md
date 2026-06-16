@@ -122,8 +122,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 目前線上資源版本：
 
 ```text
-styles.css?v=20260616-2
-app.js?v=20260616-2
+styles.css?v=20260616-3
+app.js?v=20260616-3
 ```
 
 前次 code review 修正 commit：
@@ -132,7 +132,7 @@ app.js?v=20260616-2
 c5f16c6 Fix race review issues
 ```
 
-目前部署包含 2026-06-14 Claude code review 後的修正，以及 2026-06-16 視覺與互動更新：放大浪花、湖面魚跳、接近終點時船頭領隊奮力衝刺表情、比賽結果第一名凸顯，以及玩家按「划！」後立即更新個人與隊伍按擊數字。HTML 目前引用 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2`。
+目前部署包含 2026-06-14 Claude code review 後的修正，以及 2026-06-16 視覺與互動更新：放大浪花、湖面魚跳、接近終點時船頭領隊奮力衝刺表情、比賽結果第一名凸顯，以及玩家按「划！」後立即更新個人與隊伍按擊數字。HTML 目前引用 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
 
 若要從零重新部署，最簡單做法是讓 `dragon-boat-race` 內的檔案成為 GitHub repo 根目錄。
 
@@ -257,7 +257,7 @@ const app = initializeApp(firebaseConfig);
 
 - 現場 Wi-Fi 與行動網路是否穩定。
 - 玩家是否都使用 GitHub Pages 網址，不要混用本機網址或舊部署。
-- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260616-2` 或重新掃 QR code。
+- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260616-3` 或重新掃 QR code。
 - 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
 
 ## 測試紀錄
@@ -269,8 +269,8 @@ const app = initializeApp(firebaseConfig);
 - `firebase-database.rules.json` JSON parse 通過。
 - 本機首頁、主持頁與加入頁 URL 回 `200`。
 - GitHub Pages 首頁、主持頁與加入頁 URL 回 `200`。
-- 部署版 HTML 已更新到 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2`。
-- 部署版 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2` 可載入。
+- 部署版 HTML 已更新到 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
+- 部署版 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3` 可載入。
 - Firebase 臨時房間流程測試通過：建立房間、玩家資料、分隊、按擊統計、結束比賽與刪除測試房間。
 - Firebase `increment()` 實際寫入測試通過。
 
@@ -333,13 +333,13 @@ http://192.168.x.x:5173
 JavaScript：
 
 ```html
-<script type="module" src="./app.js?v=20260616-2"></script>
+<script type="module" src="./app.js?v=20260616-3"></script>
 ```
 
 CSS：
 
 ```html
-<link rel="stylesheet" href="./styles.css?v=20260616-2" />
+<link rel="stylesheet" href="./styles.css?v=20260616-3" />
 ```
 
 或在瀏覽器做 hard reload。

@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260616-2
-app.js?v=20260616-2
+styles.css?v=20260616-3
+app.js?v=20260616-3
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2`。
+- GitHub Pages 首頁引用 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -276,8 +276,8 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 6. 若修改 `app.js` 或 `styles.css`，請同步更新 `index.html` 的版本參數，避免 GitHub Pages 或瀏覽器快取舊資源：
 
    ```html
-   <link rel="stylesheet" href="./styles.css?v=20260616-2" />
-   <script type="module" src="./app.js?v=20260616-2"></script>
+   <link rel="stylesheet" href="./styles.css?v=20260616-3" />
+   <script type="module" src="./app.js?v=20260616-3"></script>
    ```
 
 7. 推 GitHub 後若 Pages 使用 `gh-pages` 分支，請同步推：
@@ -449,3 +449,34 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 限制：
 
 - 本次仍未做自動化瀏覽器點擊驗證。正式活動前建議用至少一支手機確認按下「划！」後個人與隊伍數字立即增加，並跑完一場確認結果排序與第一名凸顯。
+
+## 2026-06-16 排名判定與初期按擊延遲再修正
+
+來源：使用者截圖顯示紅隊 `180 公尺 · 174 下` 被列第一名，藍隊 `180 公尺 · 221 下` 被列第二名；使用者也回報剛開始手機按擊次數顯示仍有延遲。
+
+原因判斷：
+
+- 原本 `runRaceTicker()` 在多隊同一 tick 抵達終點時，以「當下瞬間速度」優先決定 `state.winner`，總按擊數只作第二順位。
+- 結果列表又會把 `state.winner` 強制放在第一名，因此可能出現距離相同但總按擊較少的隊伍被列第一。
+- 手機按擊數已加入本機樂觀顯示，但若使用者手機仍載到舊資源，或等待 Firebase 批次回寫，仍可能感覺剛開始數字慢。
+
+本次修正：
+
+- `app.js`：終點同 tick tie-break 改為總按擊數優先，再比瞬間速度，最後才用固定隊伍順序。
+- `app.js`：`getRaceRanking()` 不再無條件把 `state.winner` 放第一；結果排名改為距離優先、總按擊數第二、既有 winner 僅作更後面的 tie-break。
+- `app.js`：Firebase click flush 間隔由 `650ms` 降為 `420ms`，讓初期按擊更快同步到伺服器，同時仍保留批次降低寫入壓力。
+- `index.html`：資源版本更新為 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`，強制手機載入新邏輯。
+
+驗證：
+
+- `node --check app.js` 通過。
+- DOM selector 靜態檢查通過。
+- 本機 HTTP server smoke test 通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
+- 本機 HTML 已確認引用 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
+
+限制：
+
+- 仍需用手機真機確認按擊數字的實際手感，尤其是現場 Wi-Fi 與手機瀏覽器快取狀態。
