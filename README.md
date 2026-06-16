@@ -33,8 +33,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 目前線上資源版本：
 
 ```text
-styles.css?v=20260616-3
-app.js?v=20260616-3
+styles.css?v=20260616-4
+app.js?v=20260616-4
 ```
 
 前次 code review 修正 commit：
@@ -55,6 +55,7 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 - `README.md`：快速總覽。
 - `USER_GUIDE.md`：操作、測試、部署與活動使用說明。
 - `DEVELOPMENT_LOG.md`：開發紀錄、目前狀態與 Codex CLI 接手資訊。
+- `CLAUDE.md`：Claude/Codex 接手注意事項。
 
 ## 本機預覽
 
@@ -103,6 +104,8 @@ export const firebaseConfig = {
 
 目前專案維持免登入活動流程，因此 `firebase-database.rules.json` 主要限制資料結構與可寫路徑，避免整個 database 被任意寫入。它不能真正驗證誰是主持人；若未來需要主持人密碼、登入或後台管理，建議加入 Firebase Auth 或 Cloud Functions。
 
+目前 GitHub Pages 直接 import `firebase-config.js`，所以此 Firebase web config 保留在 repo 內。Firebase Web API key 不是 server secret；正式防線仍是 Realtime Database Rules、資料結構限制與活動房間控管。不要 commit service account JSON、`.env`、私密 token 或其他伺服器憑證。
+
 ## 建議 Realtime Database Rules
 
 專案已提供 `firebase-database.rules.json`，正式活動前建議到 Firebase Console 的 Realtime Database Rules 套用該檔內容。這份 rules 會限制可寫欄位、玩家名稱長度、隊伍值、賽道位置與房間資料形狀。
@@ -126,7 +129,7 @@ export const firebaseConfig = {
 
 目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
 
-2026-06-16 最近排名與按擊回饋修正後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
+2026-06-16 最近排名與按擊回饋修正後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
 
 若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 

@@ -18,6 +18,7 @@ const SPEED_WINDOW_MS = 3000;
 const RECENT_BUCKET_MS = 1000;
 const FLUSH_MS = 420;
 const RACE_TICK_MS = 500;
+const SPEED_BOOST_CAP = 8;
 
 const params = new URLSearchParams(window.location.search);
 const view = params.get("view") || "host";
@@ -82,7 +83,7 @@ function renderHost() {
 
   document.querySelector("#shuffleTeams").addEventListener("click", async () => {
     const players = Object.values(state.players);
-    const shuffled = players.sort(() => Math.random() - 0.5);
+    const shuffled = shufflePlayers(players);
     const updates = {};
     shuffled.forEach((player, index) => {
       updates[player.id] = { ...player, team: TEAMS[index % TEAMS.length].id };
@@ -288,9 +289,10 @@ function updatePlayer() {
   const playerScreen = document.querySelector("#playerScreen");
   const playerTeam = document.querySelector("#playerTeam");
   const playerStatus = document.querySelector("#playerStatus");
+  const playerCountdown = document.querySelector("#playerCountdown");
   const button = document.querySelector("#paddleButton");
 
-  if (!playerScreen || !playerTeam || !playerStatus || !button) return;
+  if (!playerScreen || !playerTeam || !playerStatus || !playerCountdown || !button) return;
 
   if (!player) {
     window.location.href = `?view=join&room=${encodeURIComponent(state.roomCode)}`;
@@ -301,6 +303,7 @@ function updatePlayer() {
   playerScreen.style.setProperty("--team", team?.color || "#65716d");
   playerTeam.textContent = team?.name || "等待分隊";
   playerStatus.textContent = STATUS_LABELS[state.status] || "等待";
+  playerCountdown.textContent = countdownText(state);
   button.disabled = !canPaddle();
   updatePlayerStats();
 }
@@ -331,7 +334,7 @@ async function startRace(roomCode) {
 
   const needsTeams = players.some((player) => !player.team);
   if (needsTeams) {
-    const shuffled = players.sort(() => Math.random() - 0.5);
+    const shuffled = shufflePlayers(players);
     const updates = {};
     shuffled.forEach((player, index) => {
       updates[player.id] = { ...player, team: TEAMS[index % TEAMS.length].id };
@@ -350,18 +353,7 @@ async function startRace(roomCode) {
   });
 
   clearInterval(countdownTimer);
-  countdownTimer = window.setInterval(async () => {
-    if (Date.now() < state.countdownEndsAt) return;
-    clearInterval(countdownTimer);
-    countdownTimer = null;
-    if (!isHostOwner(state)) return;
-    await store.updateRoom(roomCode, {
-      status: "racing",
-      startedAt: Date.now(),
-      countdownEndsAt: null
-    });
-    runRaceTicker(roomCode);
-  }, 200);
+  countdownTimer = null;
 }
 
 function runRaceTicker(roomCode) {
@@ -387,10 +379,10 @@ function runRaceTicker(roomCode) {
     TEAMS.forEach((team) => {
       const stats = teams[team.id];
       const pace = stats.members ? stats.speed / Math.max(1, stats.members) : 0;
-      const boost = pace > 0 ? Math.min(3, pace * 0.85) : 0;
+      const boost = pace > 0 ? Math.min(SPEED_BOOST_CAP, pace) : 0;
       const nextPosition = Math.min(finishDistance, (nextPositions[team.id] || 0) + boost);
       nextPositions[team.id] = nextPosition;
-    if (nextPosition >= finishDistance) {
+      if (nextPosition >= finishDistance) {
         finishers.push({ id: team.id, speed: stats.speed, clicks: stats.clicks });
       }
     });
@@ -417,8 +409,7 @@ function syncHostTimers(roomCode) {
   if (!countdown) return;
 
   if (state.status === "countdown" && state.countdownEndsAt) {
-    const left = Math.max(0, Math.ceil((state.countdownEndsAt - Date.now()) / 1000));
-    countdown.textContent = left > 0 ? String(left) : "GO";
+    countdown.textContent = countdownText(state);
 
     if (!isHostOwner(state)) {
       clearInterval(countdownTimer);
@@ -428,7 +419,7 @@ function syncHostTimers(roomCode) {
 
     if (!countdownTimer) {
       countdownTimer = window.setInterval(async () => {
-        if (state.status !== "countdown") {
+        if (state.status !== "countdown" || !state.countdownEndsAt) {
           clearInterval(countdownTimer);
           countdownTimer = null;
           return;
@@ -557,7 +548,7 @@ async function createFirebaseStore() {
       return update(ref(db, `rooms/${roomCode}`), patch);
     },
     setPlayers(roomCode, players) {
-      return set(ref(db, `rooms/${roomCode}/players`), players);
+      return update(ref(db, `rooms/${roomCode}/players`), players);
     },
     addClicks(roomCode, id, count) {
       const now = Date.now();
@@ -604,7 +595,7 @@ function createLocalStore() {
     },
     async setPlayers(roomCode, players) {
       const room = getLocalRoom(roomCode);
-      saveLocalRoom(roomCode, { ...room, players });
+      saveLocalRoom(roomCode, { ...room, players: { ...room.players, ...players } });
     },
     async addClicks(roomCode, id, count) {
       const room = getLocalRoom(roomCode);
@@ -734,6 +725,15 @@ function teamOrder(teamId) {
   return index === -1 ? TEAMS.length : index;
 }
 
+function shufflePlayers(players) {
+  const shuffled = [...players];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
 function getRaceRanking(roomState, teamStats) {
   const ranking = TEAMS
     .map((team) => ({ ...team, position: roomState.positions[team.id] || 0, clicks: teamStats[team.id].clicks }))
@@ -746,6 +746,12 @@ function getRaceRanking(roomState, teamStats) {
     );
 
   return ranking;
+}
+
+function countdownText(roomState) {
+  if (roomState.status !== "countdown" || !roomState.countdownEndsAt) return "";
+  const left = Math.max(0, Math.ceil((roomState.countdownEndsAt - Date.now()) / 1000));
+  return left > 0 ? String(left) : "GO";
 }
 
 function headlineForState(roomState) {

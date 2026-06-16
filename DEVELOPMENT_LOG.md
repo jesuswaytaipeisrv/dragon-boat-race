@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260616-3
-app.js?v=20260616-3
+styles.css?v=20260616-4
+app.js?v=20260616-4
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
+- GitHub Pages 首頁引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -276,8 +276,8 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 6. 若修改 `app.js` 或 `styles.css`，請同步更新 `index.html` 的版本參數，避免 GitHub Pages 或瀏覽器快取舊資源：
 
    ```html
-   <link rel="stylesheet" href="./styles.css?v=20260616-3" />
-   <script type="module" src="./app.js?v=20260616-3"></script>
+   <link rel="stylesheet" href="./styles.css?v=20260616-4" />
+   <script type="module" src="./app.js?v=20260616-4"></script>
    ```
 
 7. 推 GitHub 後若 Pages 使用 `gh-pages` 分支，請同步推：
@@ -465,7 +465,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `app.js`：終點同 tick tie-break 改為總按擊數優先，再比瞬間速度，最後才用固定隊伍順序。
 - `app.js`：`getRaceRanking()` 不再無條件把 `state.winner` 放第一；結果排名改為距離優先、總按擊數第二、既有 winner 僅作更後面的 tie-break。
 - `app.js`：Firebase click flush 間隔由 `650ms` 降為 `420ms`，讓初期按擊更快同步到伺服器，同時仍保留批次降低寫入壓力。
-- `index.html`：資源版本更新為 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`，強制手機載入新邏輯。
+- `index.html`：資源版本更新為 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`，強制手機載入新邏輯。
 
 驗證：
 
@@ -475,8 +475,48 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
   - `http://127.0.0.1:5173/` 回 `200 OK`。
   - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
   - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
-- 本機 HTML 已確認引用 `styles.css?v=20260616-3` 與 `app.js?v=20260616-3`。
+- 本機 HTML 已確認引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
 
 限制：
 
 - 仍需用手機真機確認按擊數字的實際手感，尤其是現場 Wi-Fi 與手機瀏覽器快取狀態。
+
+## 2026-06-16 Claude Code Review 追修
+
+來源：`/Users/garyhuang/Documents/Claude/Projects/dragon-boat-race/CODE_REVIEW_2026-06-16.md`。
+
+已修正：
+
+- P0-1：`createFirebaseStore.setPlayers()` 由整包 `set()` 改為 `update()`；本地 store 也改為 merge players，避免分隊或重設時覆蓋同時間新加入的玩家。
+- P0-2：倒數 interval 在 `state.status !== "countdown"` 或 `countdownEndsAt` 為空時會立即清除，不再讓 `null` 被 coercion 成 `0` 後誤觸發開賽。
+- P0-3：速度加成上限由硬上限 `3` 改為 `SPEED_BOOST_CAP = 8`，並改用 `pace` 直接反映每人按擊頻率，讓快慢隊伍差距更明顯。
+- P2-1：玩家手機畫面新增倒數顯示，倒數期間會看到 `3/2/1/GO`。
+- P2-2：隨機分隊由 `sort(() => Math.random() - 0.5)` 改為 Fisher-Yates shuffle。
+- P2-3：倒數結束到開賽改由 `syncHostTimers()` 統一處理，`startRace()` 只寫入倒數狀態，降低雙 interval 路徑風險。
+- P1-1：新增 `.gitignore`，排除 `.DS_Store`、log、暫存檔、node_modules、coverage、dist、`.env*` 與 service account JSON。因 GitHub Pages 直接 import `firebase-config.js`，目前保留該 Firebase web config 並在 `CLAUDE.md` 說明它不是 server secret。
+- 新增 `CLAUDE.md`，記錄專案結構、Firebase config 取捨、接手順序與快速檢查指令。
+
+暫不修正：
+
+- P1-2：Realtime Database rules 防作弊需要 Firebase Auth 或其他主持人權限機制，屬架構級改動；目前維持免登入活動流程，先列為正式公平競賽前需另行評估。
+- P2-4：host ticker transaction 化會增加資料模型與同步複雜度，目前仍用單 host owner 推進與 `await` 控制節奏。
+- P2-5：停手玩家的舊 recent buckets 不影響速度計算，仍會在玩家下一次點擊或重設時清理。
+- P2-6：賽道長度滑桿拖曳被回呼打斷屬低機率 lobby 操作問題，先觀察。
+
+版本：
+
+- `index.html` 已更新為 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
+
+驗證：
+
+- `git diff --check` 通過。
+- `node --check app.js` 通過。
+- `firebase-database.rules.json` JSON parse 通過。
+- DOM selector 靜態檢查通過。
+- Claude review 重點靜態檢查通過：Firebase `setPlayers()` 使用 `update()`、local store merge players、倒數 null guard、`SPEED_BOOST_CAP = 8`、Fisher-Yates helper 均存在。
+- `.gitignore` 已確認會排除 `.env`、service account JSON、log 與 `.DS_Store`。
+- 本機 HTTP server smoke test 通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=player&room=DRAGON` 回 `200 OK`。
+- 本機 HTML 已確認引用 `styles.css?v=20260616-4`、`app.js?v=20260616-4`，並包含 `#playerCountdown`。

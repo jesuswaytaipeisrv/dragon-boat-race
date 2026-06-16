@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>龍舟衝刺</title>
-    <link rel="stylesheet" href="./styles.css?v=20260616-3" />
+    <link rel="stylesheet" href="./styles.css?v=20260616-4" />
   </head>
   <body>
     <div id="app" class="app-shell">
@@ -110,7 +110,10 @@
             <p class="label">你的隊伍</p>
             <h1 id="playerTeam">等待分隊</h1>
           </div>
-          <div id="playerStatus" class="status-pill">等待</div>
+          <div class="player-state">
+            <div id="playerCountdown" class="player-countdown"></div>
+            <div id="playerStatus" class="status-pill">等待</div>
+          </div>
         </div>
 
         <button id="paddleButton" class="paddle-button" type="button" disabled>
@@ -130,6 +133,6 @@
       </section>
     </template>
 
-    <script type="module" src="./app.js?v=20260616-3"></script>
+    <script type="module" src="./app.js?v=20260616-4"></script>
   </body>
 </html>

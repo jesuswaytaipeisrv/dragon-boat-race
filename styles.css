@@ -790,6 +790,20 @@ body[data-view="player"] .topbar {
   gap: 14px;
 }
 
+.player-state {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.player-countdown {
+  min-height: 3.6rem;
+  font-size: clamp(3rem, 16vw, 5.2rem);
+  font-weight: 950;
+  line-height: 0.9;
+  text-shadow: 0 8px 24px rgba(24, 32, 29, 0.24);
+}
+
 .player-top .label,
 .player-stats .label {
   color: rgba(255, 255, 255, 0.74);
@@ -909,5 +923,9 @@ body[data-view="player"] .topbar {
   .player-top {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .player-state {
+    justify-items: start;
   }
 }
