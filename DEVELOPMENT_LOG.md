@@ -165,10 +165,10 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前 `main` 與 `gh-pages` 都指向最新部署 commit：
 
 ```text
-c5f16c6 Fix race review issues
+0b91052 Enhance race visual effects
 ```
 
-因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署，部署後確認 GitHub Pages 回 `200 OK`，且 HTML 已引用 `app.js?v=20260614-1`。
+因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署，部署後確認 GitHub Pages 回 `200 OK`，且 HTML 已引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
 
 ## 建議 Database Rules
 
@@ -222,7 +222,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `app.js?v=20260614-1`。
+- GitHub Pages 首頁引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -275,8 +275,8 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 6. 若修改 `app.js` 或 `styles.css`，請同步更新 `index.html` 的版本參數，避免 GitHub Pages 或瀏覽器快取舊資源：
 
    ```html
-   <link rel="stylesheet" href="./styles.css?v=20260613-2" />
-  <script type="module" src="./app.js?v=20260614-1"></script>
+   <link rel="stylesheet" href="./styles.css?v=20260616-1" />
+   <script type="module" src="./app.js?v=20260616-1"></script>
    ```
 
 7. 推 GitHub 後若 Pages 使用 `gh-pages` 分支，請同步推：
@@ -365,7 +365,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 本次更新：
 
-- `README.md` 補上最新部署 commit `c5f16c6`、2026-06-16 部署狀態、GitHub Pages 新版 HTML 與 `app.js?v=20260614-1`。
+- `README.md` 補上當時最新部署 commit `c5f16c6`、2026-06-16 部署狀態、GitHub Pages 新版 HTML 與 `app.js?v=20260614-1`。
 - `README.md` 與 `USER_GUIDE.md` 將 Realtime Database Rules 的正式建議改為套用 `firebase-database.rules.json`，並保留寬鬆 read/write rules 作為短期測試排除問題用。
 - `USER_GUIDE.md` 補上 Claude code review 修正摘要、最新 cache-busting 版本、部署驗證紀錄與 in-app Browser 不可用的測試限制。
 - `DEVELOPMENT_LOG.md` 更新舊的最新 commit 與測試紀錄，避免仍指向 `76befec` 或 `app.js?v=20260613-4`。
@@ -397,8 +397,24 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
   - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
   - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
 - 本機 HTML 已確認引用 `styles.css?v=20260616-1`、`app.js?v=20260616-1`，並包含 `.fish-pond`。
+- GitHub Pages 部署後確認：
+  - `main` 與 `gh-pages` 均指向 `0b91052 Enhance race visual effects`。
+  - 公開主持頁回 `200 OK`。
+  - 公開 HTML 已引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
+  - 部署版 CSS 已包含 `fishJump`、第五層浪花與 `finalPush`。
+  - 部署版 JS 已包含 `leaderEffort` 與 `leader-effort`。
 
 限制：
 
 - 本次環境的 in-app Browser 先前回報不可用，因此尚未做自動化瀏覽器截圖或實際點擊視覺驗證。
 - 正式活動前仍建議用主持頁實際跑一輪比賽，確認浪花、魚跳與終點前領隊表情符合現場大螢幕效果。
+
+## 2026-06-16 視覺更新後文件同步
+
+目的：補齊視覺更新部署後的文件狀態，避免 README 與使用說明只停留在前次 code review commit。
+
+本次更新：
+
+- `README.md` 補上目前部署 commit `0b91052 Enhance race visual effects`。
+- `USER_GUIDE.md` 補上目前部署 commit，並把目前部署描述改為同時包含 code review 修正與視覺效果更新。
+- `DEVELOPMENT_LOG.md` 將 GitHub 部署現況更新為 `0b91052`，並補上 GitHub Pages 已回新版 HTML、CSS、JS 的部署後檢查結果。

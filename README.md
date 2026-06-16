@@ -29,6 +29,12 @@ GitHub Pages：
 https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 ```
 
+目前部署 commit：
+
+```text
+0b91052 Enhance race visual effects
+```
+
 前次 code review 修正 commit：
 
 ```text
@@ -118,7 +124,7 @@ export const firebaseConfig = {
 
 目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
 
-2026-06-16 視覺更新後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
+最近確認：`main` 與 `gh-pages` 均為 `0b91052`，GitHub Pages 已回新版 HTML，引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
 
 若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 

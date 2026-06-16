@@ -119,13 +119,19 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 
 目前使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 都在最新 commit。
 
+目前部署 commit：
+
+```text
+0b91052 Enhance race visual effects
+```
+
 前次 code review 修正 commit：
 
 ```text
 c5f16c6 Fix race review issues
 ```
 
-這次部署包含 2026-06-14 Claude code review 後的修正：多主持分頁保護、倒數與 race ticker 清理、加入房間競態修正、賽道長度實際生效、倒數期間禁止重複開始，以及新增 `firebase-database.rules.json`。
+目前部署包含 2026-06-14 Claude code review 後的修正，以及 2026-06-16 視覺效果更新：放大浪花、湖面魚跳、接近終點時船頭領隊奮力衝刺表情。HTML 目前引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
 
 若要從零重新部署，最簡單做法是讓 `dragon-boat-race` 內的檔案成為 GitHub repo 根目錄。
 
@@ -262,8 +268,8 @@ const app = initializeApp(firebaseConfig);
 - `firebase-database.rules.json` JSON parse 通過。
 - 本機首頁、主持頁與加入頁 URL 回 `200`。
 - GitHub Pages 首頁、主持頁與加入頁 URL 回 `200`。
-- 部署版 HTML 已更新到 `app.js?v=20260614-1`。
-- 部署版 `app.js?v=20260614-1` 可載入。
+- 部署版 HTML 已更新到 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
+- 部署版 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1` 可載入。
 - Firebase 臨時房間流程測試通過：建立房間、玩家資料、分隊、按擊統計、結束比賽與刪除測試房間。
 - Firebase `increment()` 實際寫入測試通過。
 
