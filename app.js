@@ -35,6 +35,7 @@ let state = createEmptyState(params.get("room") || makeRoomCode());
 let unsubscribe = () => {};
 let flushTimer = null;
 let pendingClicks = 0;
+let optimisticClickTotal = 0;
 let countdownTimer = null;
 let raceTicker = null;
 
@@ -144,6 +145,7 @@ function renderPlayer() {
   clearInterval(flushTimer);
   flushTimer = null;
   pendingClicks = 0;
+  optimisticClickTotal = 0;
 
   const roomCode = params.get("room") || localStorage.getItem(playerRoomKey) || "";
   if (!roomCode) {
@@ -158,6 +160,8 @@ function renderPlayer() {
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     if (!canPaddle()) return;
+    optimisticClickTotal = Math.max(optimisticClickTotal, state.players[playerId]?.clicks || 0);
+    optimisticClickTotal += 1;
     pendingClicks += 1;
     updatePlayerStats();
     button.animate(
@@ -263,13 +267,16 @@ function updateHost() {
   );
 
   if (state.status === "finished") {
-    const ranking = TEAMS
-      .map((team) => ({ ...team, position: state.positions[team.id] || 0, clicks: teams[team.id].clicks }))
-      .sort((a, b) => b.position - a.position || b.clicks - a.clicks);
+    const ranking = getRaceRanking(state, teams);
     results.hidden = false;
     results.innerHTML = `
       <h3>比賽結果</h3>
-      <ol>${ranking.map((team) => `<li>${team.name} · ${Math.round(team.position)} 公尺 · ${team.clicks} 下</li>`).join("")}</ol>
+      <ol>${ranking.map((team, index) => `
+        <li class="${index === 0 ? "winner" : ""}">
+          <span>${team.name}</span>
+          <strong>${index + 1} 名 · ${Math.round(team.position)} 公尺 · ${team.clicks} 下</strong>
+        </li>
+      `).join("")}</ol>
     `;
   } else {
     results.hidden = true;
@@ -305,8 +312,12 @@ function updatePlayerStats() {
   const playerClicks = document.querySelector("#playerClicks");
   const teamClicks = document.querySelector("#teamClicks");
   if (!playerClicks || !teamClicks) return;
-  playerClicks.textContent = String((player?.clicks || 0) + pendingClicks);
-  teamClicks.textContent = String(teamStats[teamId]?.clicks || 0);
+  const serverPlayerClicks = player?.clicks || 0;
+  optimisticClickTotal = Math.max(optimisticClickTotal, serverPlayerClicks);
+  const visiblePlayerClicks = Math.max(serverPlayerClicks + pendingClicks, optimisticClickTotal);
+  const localUnconfirmedClicks = Math.max(0, visiblePlayerClicks - serverPlayerClicks);
+  playerClicks.textContent = String(visiblePlayerClicks);
+  teamClicks.textContent = String((teamStats[teamId]?.clicks || 0) + localUnconfirmedClicks);
 }
 
 function canPaddle() {
@@ -721,6 +732,19 @@ function isHostOwner(roomState) {
 function teamOrder(teamId) {
   const index = TEAMS.findIndex((team) => team.id === teamId);
   return index === -1 ? TEAMS.length : index;
+}
+
+function getRaceRanking(roomState, teamStats) {
+  const ranking = TEAMS
+    .map((team) => ({ ...team, position: roomState.positions[team.id] || 0, clicks: teamStats[team.id].clicks }))
+    .sort((a, b) => b.position - a.position || b.clicks - a.clicks || teamOrder(a.id) - teamOrder(b.id));
+
+  if (!roomState.winner) return ranking;
+
+  const winner = ranking.find((team) => team.id === roomState.winner);
+  if (!winner) return ranking;
+
+  return [winner, ...ranking.filter((team) => team.id !== roomState.winner)];
 }
 
 function headlineForState(roomState) {

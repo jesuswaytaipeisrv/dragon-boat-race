@@ -162,13 +162,14 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON
 https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 ```
 
-目前 `main` 與 `gh-pages` 都指向最新部署 commit：
+目前線上資源版本：
 
 ```text
-0b91052 Enhance race visual effects
+styles.css?v=20260616-2
+app.js?v=20260616-2
 ```
 
-因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署，部署後確認 GitHub Pages 回 `200 OK`，且 HTML 已引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
+因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
 
 ## 建議 Database Rules
 
@@ -222,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
+- GitHub Pages 首頁引用 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -275,8 +276,8 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 6. 若修改 `app.js` 或 `styles.css`，請同步更新 `index.html` 的版本參數，避免 GitHub Pages 或瀏覽器快取舊資源：
 
    ```html
-   <link rel="stylesheet" href="./styles.css?v=20260616-1" />
-   <script type="module" src="./app.js?v=20260616-1"></script>
+   <link rel="stylesheet" href="./styles.css?v=20260616-2" />
+   <script type="module" src="./app.js?v=20260616-2"></script>
    ```
 
 7. 推 GitHub 後若 Pages 使用 `gh-pages` 分支，請同步推：
@@ -418,3 +419,33 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `README.md` 補上目前部署 commit `0b91052 Enhance race visual effects`。
 - `USER_GUIDE.md` 補上目前部署 commit，並把目前部署描述改為同時包含 code review 修正與視覺效果更新。
 - `DEVELOPMENT_LOG.md` 將 GitHub 部署現況更新為 `0b91052`，並補上 GitHub Pages 已回新版 HTML、CSS、JS 的部署後檢查結果。
+
+## 2026-06-16 結果排名與按擊回饋修正
+
+需求：
+
+- 比賽結果要依照名次由上往下排列，第一名隊伍要特別凸顯文字。
+- 剛開始玩時按「划！」後數字有延遲，要改善按一陣子才看到數字的感覺。
+
+本次修改：
+
+- `app.js`：新增 `getRaceRanking()`，結果列表優先使用 `state.winner` 作為第一名，其餘隊伍再依距離、總按擊數與固定隊伍順序排序。
+- `app.js`：結果列表改為顯示 `1 名`、`2 名`、`3 名`，第一名項目加上 `.winner` class。
+- `styles.css`：新增 `.results li.winner` 樣式，用金色背景、左側金色標記與加粗字體凸顯第一名。
+- `app.js`：新增 `optimisticClickTotal`。玩家按下「划！」時立即更新本機顯示，不等 Firebase 批次送出與伺服器回寫。
+- `app.js`：隊伍按擊數也會加上本機尚未被 Firebase 確認的點擊數，減少剛開始按時隊伍數字不動的延遲感。
+- `index.html`：資源版本更新為 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2`。
+
+驗證：
+
+- `node --check app.js` 通過。
+- DOM selector 靜態檢查通過。
+- 本機 HTTP server smoke test 通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
+- 本機 HTML 已確認引用 `styles.css?v=20260616-2` 與 `app.js?v=20260616-2`。
+
+限制：
+
+- 本次仍未做自動化瀏覽器點擊驗證。正式活動前建議用至少一支手機確認按下「划！」後個人與隊伍數字立即增加，並跑完一場確認結果排序與第一名凸顯。

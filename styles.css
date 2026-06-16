@@ -695,6 +695,27 @@ body[data-view="player"] .topbar {
   font-weight: 900;
 }
 
+.results li {
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.results li strong {
+  display: block;
+  margin-top: 2px;
+}
+
+.results li.winner {
+  color: #8a4300;
+  background: linear-gradient(90deg, rgba(231, 182, 64, 0.42), rgba(255, 255, 255, 0.08));
+  box-shadow: inset 4px 0 0 var(--gold);
+}
+
+.results li.winner span {
+  font-size: 1.18rem;
+  font-weight: 950;
+}
+
 .join-layout {
   min-height: calc(100vh - 65px);
   display: grid;
