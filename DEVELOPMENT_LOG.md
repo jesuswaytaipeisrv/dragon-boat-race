@@ -520,3 +520,21 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
   - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
   - `http://127.0.0.1:5173/?view=player&room=DRAGON` 回 `200 OK`。
 - 本機 HTML 已確認引用 `styles.css?v=20260616-4`、`app.js?v=20260616-4`，並包含 `#playerCountdown`。
+
+## 2026-06-17 Claude Review 文件補強
+
+目的：依使用者要求，確認 Claude 要求 Codex 修改的項目已完整記入專案文件，而不只留在對話紀錄。
+
+本次文件更新：
+
+- `README.md`：在目前狀態補上 2026-06-16 Claude review 追修摘要，並加入最新追修 commit `9102038 Address Claude review issues`。
+- `USER_GUIDE.md`：在部署狀態補上 Claude review 追修摘要，並註明暫不處理項目已記錄於 `DEVELOPMENT_LOG.md`。
+- `DEVELOPMENT_LOG.md`：保留逐項紀錄：
+  - 已修：P0-1、P0-2、P0-3、P1-1、P2-1、P2-2、P2-3。
+  - 暫不修：P1-2、P2-4、P2-5、P2-6。
+  - 驗證：`git diff --check`、`node --check app.js`、Rules JSON parse、DOM selector、Claude review 重點靜態檢查、`.gitignore` 檢查、本機 HTTP smoke test。
+
+目前結論：
+
+- Claude 要求 Codex 修改且本輪採納的項目，已寫入 `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md` 與 `CLAUDE.md`。
+- 需要 Firebase Auth 或主持人權限機制的防作弊項目未直接實作，因為會改變免登入活動架構；保留為正式公平競賽前的架構決策。

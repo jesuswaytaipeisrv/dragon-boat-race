@@ -126,13 +126,21 @@ styles.css?v=20260616-4
 app.js?v=20260616-4
 ```
 
+最新 Claude review 追修 commit：
+
+```text
+9102038 Address Claude review issues
+```
+
 前次 code review 修正 commit：
 
 ```text
 c5f16c6 Fix race review issues
 ```
 
-目前部署包含 2026-06-14 Claude code review 後的修正，以及 2026-06-16 視覺與互動更新：放大浪花、湖面魚跳、接近終點時船頭領隊奮力衝刺表情、比賽結果第一名凸顯，以及玩家按「划！」後立即更新個人與隊伍按擊數字。HTML 目前引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
+目前部署包含 2026-06-14 Claude code review 後的修正、2026-06-16 視覺與互動更新，以及 2026-06-16 Claude review 追修：避免玩家資料被整包覆寫、修正倒數 reset 競態、調整速度上限、玩家端倒數、Fisher-Yates 分隊、`.gitignore` 與 `CLAUDE.md`。HTML 目前引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
+
+Claude review 中暫不處理的項目也已記錄在 `DEVELOPMENT_LOG.md`：Realtime Database rules 防作弊需 Firebase Auth 或主持人權限機制，屬架構級改動；host ticker transaction 化、停手玩家 recent bucket 清理、賽道長度滑桿回呼干擾目前列為觀察。
 
 若要從零重新部署，最簡單做法是讓 `dragon-boat-race` 內的檔案成為 GitHub repo 根目錄。
 

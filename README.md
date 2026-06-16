@@ -8,6 +8,7 @@
 - 已接上 Firebase Realtime Database。
 - 已加入多主持分頁保護，倒數與賽況推進只由開賽分頁執行。
 - 已完成 2026-06-14 Claude code review 修正，並於 2026-06-16 部署到 `main` 與 `gh-pages`。
+- 已完成 2026-06-16 Claude review 追修：避免玩家資料被整包覆寫、修正倒數 reset 競態、調整速度上限、加入玩家端倒數、改 Fisher-Yates 分隊，並新增 `.gitignore` 與 `CLAUDE.md`。
 - 已改善玩家按「划！」後的本機即時數字回饋，減少 Firebase 批次送出造成的初期延遲感。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
@@ -35,6 +36,12 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 ```text
 styles.css?v=20260616-4
 app.js?v=20260616-4
+```
+
+最新 Claude review 追修 commit：
+
+```text
+9102038 Address Claude review issues
 ```
 
 前次 code review 修正 commit：
