@@ -10,7 +10,7 @@
 - 已完成 2026-06-14 Claude code review 修正，並於 2026-06-16 部署到 `main` 與 `gh-pages`。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
-- 龍舟包含船頭卡通人物、船身划船小人與移動浪花效果。
+- 龍舟包含船頭卡通人物、船身划船小人、誇張浪花、湖面魚跳與終點前領隊奮力表情。
 - 已做多人連按 lag 初步優化，降低 Firebase 寫入頻率。
 - 已完成自動化 smoke test、Firebase 讀寫流程測試與部署資源檢查。
 - 專案不需要 npm install 或 build。
@@ -29,7 +29,7 @@ GitHub Pages：
 https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 ```
 
-目前部署 commit：
+前次 code review 修正 commit：
 
 ```text
 c5f16c6 Fix race review issues
@@ -118,7 +118,7 @@ export const firebaseConfig = {
 
 目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
 
-最近確認：`main` 與 `gh-pages` 均為 `c5f16c6`，GitHub Pages 已回新版 HTML，引用 `app.js?v=20260614-1`。
+2026-06-16 視覺更新後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`。
 
 若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 

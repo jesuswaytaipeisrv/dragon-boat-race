@@ -293,6 +293,7 @@ body[data-view="player"] .topbar {
 }
 
 .race-stage::before {
+  z-index: 0;
   background:
     repeating-linear-gradient(
       175deg,
@@ -303,6 +304,7 @@ body[data-view="player"] .topbar {
 }
 
 .race-stage::after {
+  z-index: 2;
   width: 8px;
   left: clamp(58px, 8vw, 96px);
   background: repeating-linear-gradient(
@@ -314,7 +316,7 @@ body[data-view="player"] .topbar {
 
 .race-status {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   gap: 18px;
@@ -347,6 +349,120 @@ body[data-view="player"] .topbar {
   display: grid;
   gap: clamp(12px, 3vh, 24px);
   margin-top: clamp(22px, 5vh, 52px);
+}
+
+.fish-pond {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fish-pond span {
+  --fish-x: 50%;
+  --fish-y: 50%;
+  --fish-delay: 0s;
+  --fish-duration: 4.8s;
+  position: absolute;
+  left: var(--fish-x);
+  top: var(--fish-y);
+  width: clamp(26px, 3vw, 44px);
+  height: clamp(20px, 2.4vw, 34px);
+  opacity: 0;
+  transform: translate(-50%, 28px) rotate(-12deg) scale(0.8);
+  animation: fishJump var(--fish-duration) cubic-bezier(0.2, 0.72, 0.35, 1) infinite;
+  animation-delay: var(--fish-delay);
+}
+
+.fish-pond span::before {
+  content: "";
+  position: absolute;
+  inset: 25% 10% 18%;
+  border-radius: 70% 58% 58% 70%;
+  background:
+    radial-gradient(circle at 72% 35%, #18201d 0 2px, transparent 2.4px),
+    linear-gradient(135deg, #f4d36d, #f06f42 70%);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.22) inset;
+}
+
+.fish-pond span::after {
+  content: "";
+  position: absolute;
+  left: 4%;
+  top: 36%;
+  width: 14px;
+  height: 14px;
+  border-left: 8px solid #f06f42;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  filter: drop-shadow(34px 14px 0 rgba(255, 255, 255, 0.72))
+    drop-shadow(22px 18px 0 rgba(255, 255, 255, 0.52))
+    drop-shadow(44px 20px 0 rgba(255, 255, 255, 0.38));
+}
+
+.fish-pond span:nth-child(1) {
+  --fish-x: 73%;
+  --fish-y: 28%;
+  --fish-delay: -0.7s;
+  --fish-duration: 5.4s;
+}
+
+.fish-pond span:nth-child(2) {
+  --fish-x: 42%;
+  --fish-y: 38%;
+  --fish-delay: -2.8s;
+  --fish-duration: 6.2s;
+}
+
+.fish-pond span:nth-child(3) {
+  --fish-x: 84%;
+  --fish-y: 61%;
+  --fish-delay: -4.1s;
+  --fish-duration: 5.8s;
+}
+
+.fish-pond span:nth-child(4) {
+  --fish-x: 29%;
+  --fish-y: 70%;
+  --fish-delay: -1.9s;
+  --fish-duration: 7s;
+}
+
+.fish-pond span:nth-child(5) {
+  --fish-x: 61%;
+  --fish-y: 82%;
+  --fish-delay: -5.6s;
+  --fish-duration: 6.6s;
+}
+
+@keyframes fishJump {
+  0%,
+  54%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 30px) rotate(-18deg) scale(0.74);
+  }
+
+  61% {
+    opacity: 1;
+    transform: translate(-50%, -32px) rotate(18deg) scale(1.05);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -54px) rotate(4deg) scale(1.12);
+  }
+
+  76% {
+    opacity: 0.95;
+    transform: translate(-50%, 16px) rotate(-26deg) scale(0.96);
+  }
+
+  83% {
+    opacity: 0;
+    transform: translate(-50%, 30px) rotate(-18deg) scale(0.74);
+  }
 }
 
 .lane {
@@ -393,13 +509,18 @@ body[data-view="player"] .topbar {
   filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.22));
 }
 
+.boat.effort {
+  animation: finalPush 0.32s ease-in-out infinite;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.27));
+}
+
 .wake {
   --x: 0%;
   position: absolute;
-  right: calc(3% + var(--x) - clamp(118px, 17vw, 190px));
-  bottom: clamp(22px, 4vw, 36px);
-  width: clamp(92px, 15vw, 160px);
-  height: clamp(38px, 6vw, 62px);
+  right: calc(3% + var(--x) - clamp(150px, 22vw, 255px));
+  bottom: clamp(12px, 3vw, 30px);
+  width: clamp(138px, 23vw, 250px);
+  height: clamp(62px, 10vw, 104px);
   transform: translateX(50%);
   opacity: 0;
   transition:
@@ -408,54 +529,122 @@ body[data-view="player"] .topbar {
   pointer-events: none;
 }
 
+.wake::before,
+.wake::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.96) 0 27%, transparent 29%),
+    radial-gradient(circle at 72% 45%, rgba(255, 255, 255, 0.78) 0 18%, transparent 20%),
+    radial-gradient(circle at 28% 68%, rgba(255, 255, 255, 0.66) 0 16%, transparent 18%);
+  filter: drop-shadow(0 3px 8px rgba(16, 105, 121, 0.22));
+  animation: foamBurst 0.72s ease-out infinite;
+}
+
+.wake::before {
+  right: 0;
+  bottom: 8%;
+  width: 46%;
+  height: 42%;
+}
+
+.wake::after {
+  right: 34%;
+  bottom: 2%;
+  width: 36%;
+  height: 34%;
+  animation-delay: 0.18s;
+}
+
 .wake span {
   position: absolute;
   display: block;
-  border: 3px solid rgba(255, 255, 255, 0.88);
+  border: clamp(4px, 0.7vw, 7px) solid rgba(255, 255, 255, 0.94);
   border-left: 0;
   border-bottom: 0;
   border-radius: 999px;
-  filter: drop-shadow(0 2px 5px rgba(16, 105, 121, 0.24));
-  animation: wakePulse 0.85s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(16, 105, 121, 0.28));
+  animation: wakePulse 0.62s ease-in-out infinite;
 }
 
 .wake span:nth-child(1) {
-  width: 86%;
-  height: 34%;
+  width: 100%;
+  height: 38%;
   right: 0;
-  top: 8%;
+  top: 0;
 }
 
 .wake span:nth-child(2) {
-  width: 64%;
-  height: 30%;
-  right: 18%;
-  top: 42%;
-  animation-delay: 0.14s;
+  width: 82%;
+  height: 34%;
+  right: 14%;
+  top: 28%;
+  animation-delay: 0.1s;
 }
 
 .wake span:nth-child(3) {
-  width: 42%;
-  height: 24%;
-  right: 42%;
-  top: 72%;
-  animation-delay: 0.28s;
+  width: 64%;
+  height: 30%;
+  right: 32%;
+  top: 54%;
+  animation-delay: 0.2s;
+}
+
+.wake span:nth-child(4) {
+  width: 44%;
+  height: 26%;
+  right: 55%;
+  top: 76%;
+  animation-delay: 0.3s;
+}
+
+.wake span:nth-child(5) {
+  width: 32%;
+  height: 22%;
+  right: 74%;
+  top: 22%;
+  animation-delay: 0.4s;
 }
 
 .wake.active {
-  opacity: 0.74;
+  opacity: 0.95;
 }
 
 @keyframes wakePulse {
   0%,
   100% {
-    transform: translateX(0) scaleX(0.9);
-    opacity: 0.38;
+    transform: translateX(-2px) scaleX(0.82) scaleY(0.86);
+    opacity: 0.3;
   }
 
   45% {
-    transform: translateX(8px) scaleX(1.05);
-    opacity: 0.95;
+    transform: translateX(18px) scaleX(1.14) scaleY(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes foamBurst {
+  0%,
+  100% {
+    transform: translateX(0) translateY(6px) scale(0.72);
+    opacity: 0;
+  }
+
+  44% {
+    transform: translateX(12px) translateY(-5px) scale(1.08);
+    opacity: 0.88;
+  }
+}
+
+@keyframes finalPush {
+  0%,
+  100% {
+    transform: translateX(50%) translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateX(50%) translateY(-2px) rotate(-1.1deg);
   }
 }
 
@@ -463,6 +652,23 @@ body[data-view="player"] .topbar {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.leader-calm,
+.leader-effort {
+  transition: opacity 0.16s ease;
+}
+
+.leader-effort {
+  opacity: 0;
+}
+
+.boat.effort .leader-calm {
+  opacity: 0;
+}
+
+.boat.effort .leader-effort {
+  opacity: 1;
 }
 
 .results {

@@ -119,7 +119,7 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 
 目前使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 都在最新 commit。
 
-目前部署 commit：
+前次 code review 修正 commit：
 
 ```text
 c5f16c6 Fix race review issues
@@ -250,7 +250,7 @@ const app = initializeApp(firebaseConfig);
 
 - 現場 Wi-Fi 與行動網路是否穩定。
 - 玩家是否都使用 GitHub Pages 網址，不要混用本機網址或舊部署。
-- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260614-1` 或重新掃 QR code。
+- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260616-1` 或重新掃 QR code。
 - 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
 
 ## 測試紀錄
@@ -275,7 +275,9 @@ const app = initializeApp(firebaseConfig);
 - 龍舟由右往左前進。
 - 船頭有卡通人物。
 - 船身有小人划船。
-- 船移動時會出現浪花尾跡。
+- 船移動時會出現更大的誇張浪花尾跡。
+- 湖面會有不同位置與節奏的魚跳出水面。
+- 龍舟接近終點時，船頭領隊會切換成奮力衝刺表情。
 - 玩家手機畫面會用隊伍色做全螢幕背景。
 
 ## 常見問題
@@ -322,13 +324,13 @@ http://192.168.x.x:5173
 JavaScript：
 
 ```html
-<script type="module" src="./app.js?v=20260614-1"></script>
+<script type="module" src="./app.js?v=20260616-1"></script>
 ```
 
 CSS：
 
 ```html
-<link rel="stylesheet" href="./styles.css?v=20260613-2" />
+<link rel="stylesheet" href="./styles.css?v=20260616-1" />
 ```
 
 或在瀏覽器做 hard reload。

@@ -374,3 +374,31 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 - Firebase Console 的 Realtime Database Rules 是否已實際套用 `firebase-database.rules.json`。
 - 正式活動前仍需以 2-3 支手機實測 QR code、加入、分隊、倒數、按擊與重設。
+
+## 2026-06-16 視覺效果更新
+
+需求：讓龍舟滑行時浪花更大、更誇張；湖面隨機出現魚跳出水面；龍舟接近終點時，船頭領隊表情變得更用力、更有奪冠感。
+
+本次修改：
+
+- `styles.css`：放大 `.wake` 尺寸，浪花由 3 層增加為 5 層，加入泡沫爆開效果，並加快浪花節奏。
+- `index.html`：在主持賽道加入 `.fish-pond` 背景層，放置 5 個不同位置與不同動畫延遲的魚跳元素。
+- `styles.css`：新增 `fishJump` 動畫，讓魚以不同節奏從湖面跳出並帶出水花。
+- `app.js`：依照龍舟位置計算終點進度，當比賽中進度達 82% 以上時替龍舟加上 `.effort` class。
+- `app.js` 與 `styles.css`：船頭領隊新增一般表情與奮力表情兩組 SVG 元素，接近終點時切換為皺眉、瞪眼、咬牙、流汗的衝刺表情，龍舟也會有輕微衝刺抖動。
+- `index.html`：資源版本更新為 `styles.css?v=20260616-1` 與 `app.js?v=20260616-1`，避免部署後瀏覽器吃舊檔。
+
+驗證：
+
+- `node --check app.js` 通過。
+- DOM selector 靜態檢查通過。
+- 本機 HTTP server smoke test 通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
+- 本機 HTML 已確認引用 `styles.css?v=20260616-1`、`app.js?v=20260616-1`，並包含 `.fish-pond`。
+
+限制：
+
+- 本次環境的 in-app Browser 先前回報不可用，因此尚未做自動化瀏覽器截圖或實際點擊視覺驗證。
+- 正式活動前仍建議用主持頁實際跑一輪比賽，確認浪花、魚跳與終點前領隊表情符合現場大螢幕效果。

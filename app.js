@@ -236,7 +236,9 @@ function updateHost() {
       const stats = teams[team.id];
       const position = Math.min(getFinishDistance(state), state.positions[team.id] || 0);
       const positionPercent = getPositionPercent(position, state);
+      const finishProgress = position / getFinishDistance(state);
       const wakeActive = state.status === "racing" && (position > 0 || stats.speed > 0);
+      const leaderEffort = state.status === "racing" && finishProgress >= 0.82;
       const lane = document.createElement("article");
       lane.className = "lane";
       lane.innerHTML = `
@@ -249,8 +251,10 @@ function updateHost() {
           <span></span>
           <span></span>
           <span></span>
+          <span></span>
+          <span></span>
         </div>
-        <div class="boat" style="--team:${team.color}; --x:${positionPercent}%">
+        <div class="boat${leaderEffort ? " effort" : ""}" style="--team:${team.color}; --x:${positionPercent}%">
           ${boatSvg(team)}
         </div>
       `;
@@ -761,9 +765,21 @@ function boatSvg(team) {
         <circle cx="26" cy="28" r="23" fill="#ffd8ad" stroke="#fffdf8" stroke-width="5" />
         <path d="M7 26 C10 8 25 1 43 12 C34 10 25 16 18 27 Z" fill="#3a231b" opacity=".95" />
         <path d="M4 18 C18 6 35 5 48 18 L44 30 C31 20 20 20 8 30 Z" fill="var(--team)" />
-        <circle cx="18" cy="30" r="3" fill="#18201d" />
-        <circle cx="34" cy="30" r="3" fill="#18201d" />
-        <path d="M19 41 C24 46 31 46 36 41" fill="none" stroke="#9a4935" stroke-width="3" stroke-linecap="round" />
+        <g class="leader-calm">
+          <circle cx="18" cy="30" r="3" fill="#18201d" />
+          <circle cx="34" cy="30" r="3" fill="#18201d" />
+          <path d="M19 41 C24 46 31 46 36 41" fill="none" stroke="#9a4935" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g class="leader-effort">
+          <path d="M14 27 L24 31" stroke="#18201d" stroke-width="4" stroke-linecap="round" />
+          <path d="M39 27 L29 31" stroke="#18201d" stroke-width="4" stroke-linecap="round" />
+          <circle cx="18" cy="33" r="4" fill="#18201d" />
+          <circle cx="34" cy="33" r="4" fill="#18201d" />
+          <path d="M21 44 C24 38 31 38 34 44" fill="none" stroke="#9a4935" stroke-width="4" stroke-linecap="round" />
+          <path d="M50 28 C60 20 63 34 55 40 C47 36 46 31 50 28 Z" fill="#7fd7ec" stroke="#fffdf8" stroke-width="2" />
+          <path d="M4 38 C11 42 18 42 24 38" fill="none" stroke="#f28d7f" stroke-width="3" stroke-linecap="round" opacity=".7" />
+          <path d="M29 38 C36 42 43 42 49 38" fill="none" stroke="#f28d7f" stroke-width="3" stroke-linecap="round" opacity=".7" />
+        </g>
         <path d="M43 15 L58 8 L52 25 Z" fill="var(--team)" />
       </g>
       <g stroke="#fffdf8" stroke-width="5" stroke-linecap="round">
