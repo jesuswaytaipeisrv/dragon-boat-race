@@ -162,13 +162,13 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON
 https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 ```
 
-目前 `main` 與 `gh-pages` 都指向最新 commit：
+目前 `main` 與 `gh-pages` 都指向最新部署 commit：
 
 ```text
-76befec Reduce multiplayer sync lag
+c5f16c6 Fix race review issues
 ```
 
-因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。部署後確認 GitHub Pages 回 `200 OK`。
+因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署，部署後確認 GitHub Pages 回 `200 OK`，且 HTML 已引用 `app.js?v=20260614-1`。
 
 ## 建議 Database Rules
 
@@ -219,8 +219,10 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 
 最近完成的自動化測試：
 
+- `git diff --check` 通過。
 - `node --check app.js` 通過。
-- GitHub Pages 首頁引用 `app.js?v=20260613-4`。
+- `firebase-database.rules.json` JSON parse 通過。
+- GitHub Pages 首頁引用 `app.js?v=20260614-1`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -274,7 +276,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
    ```html
    <link rel="stylesheet" href="./styles.css?v=20260613-2" />
-   <script type="module" src="./app.js?v=20260613-4"></script>
+  <script type="module" src="./app.js?v=20260614-1"></script>
    ```
 
 7. 推 GitHub 後若 Pages 使用 `gh-pages` 分支，請同步推：
@@ -356,3 +358,19 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 - 提交後推送 `main`。
 - 因 GitHub Pages 目前使用 `gh-pages` 分支發布，再同步推送 `main:gh-pages`。
+
+## 2026-06-16 文件同步紀錄
+
+目的：依部署後狀態同步專案文件，讓 README、使用說明與開發紀錄都能反映最新版本。
+
+本次更新：
+
+- `README.md` 補上最新部署 commit `c5f16c6`、2026-06-16 部署狀態、GitHub Pages 新版 HTML 與 `app.js?v=20260614-1`。
+- `README.md` 與 `USER_GUIDE.md` 將 Realtime Database Rules 的正式建議改為套用 `firebase-database.rules.json`，並保留寬鬆 read/write rules 作為短期測試排除問題用。
+- `USER_GUIDE.md` 補上 Claude code review 修正摘要、最新 cache-busting 版本、部署驗證紀錄與 in-app Browser 不可用的測試限制。
+- `DEVELOPMENT_LOG.md` 更新舊的最新 commit 與測試紀錄，避免仍指向 `76befec` 或 `app.js?v=20260613-4`。
+
+尚需人工確認：
+
+- Firebase Console 的 Realtime Database Rules 是否已實際套用 `firebase-database.rules.json`。
+- 正式活動前仍需以 2-3 支手機實測 QR code、加入、分隊、倒數、按擊與重設。

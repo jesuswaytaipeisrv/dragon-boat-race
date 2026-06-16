@@ -7,6 +7,7 @@
 - 已可本機執行，並已部署到 GitHub Pages。
 - 已接上 Firebase Realtime Database。
 - 已加入多主持分頁保護，倒數與賽況推進只由開賽分頁執行。
+- 已完成 2026-06-14 Claude code review 修正，並於 2026-06-16 部署到 `main` 與 `gh-pages`。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
 - 龍舟包含船頭卡通人物、船身划船小人與移動浪花效果。
@@ -26,6 +27,12 @@ GitHub Pages：
 
 ```text
 https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+```
+
+目前部署 commit：
+
+```text
+c5f16c6 Fix race review issues
 ```
 
 固定測試房間：
@@ -90,7 +97,9 @@ export const firebaseConfig = {
 
 ## 建議 Realtime Database Rules
 
-活動測試用可先放寬，但正式活動建議至少限制資料大小與欄位。最簡版：
+專案已提供 `firebase-database.rules.json`，正式活動前建議到 Firebase Console 的 Realtime Database Rules 套用該檔內容。這份 rules 會限制可寫欄位、玩家名稱長度、隊伍值、賽道位置與房間資料形狀。
+
+短期本機或臨時測試若需要排除 rules 問題，才使用下列寬鬆版本：
 
 ```json
 {
@@ -108,6 +117,8 @@ export const firebaseConfig = {
 ## GitHub Pages
 
 目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
+
+最近確認：`main` 與 `gh-pages` 均為 `c5f16c6`，GitHub Pages 已回新版 HTML，引用 `app.js?v=20260614-1`。
 
 若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 
@@ -145,4 +156,6 @@ http://127.0.0.1:5173/?view=host
 
 ```bash
 curl -I https://jesuswaytaipeisrv.github.io/dragon-boat-race/
+curl -I "https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=host&room=DRAGON"
+curl -I "https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON"
 ```

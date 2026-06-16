@@ -119,6 +119,14 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 
 目前使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 都在最新 commit。
 
+目前部署 commit：
+
+```text
+c5f16c6 Fix race review issues
+```
+
+這次部署包含 2026-06-14 Claude code review 後的修正：多主持分頁保護、倒數與 race ticker 清理、加入房間競態修正、賽道長度實際生效、倒數期間禁止重複開始，以及新增 `firebase-database.rules.json`。
+
 若要從零重新部署，最簡單做法是讓 `dragon-boat-race` 內的檔案成為 GitHub repo 根目錄。
 
 ```bash
@@ -192,7 +200,11 @@ const app = initializeApp(firebaseConfig);
 
 ## Realtime Database Rules
 
-測試活動可先使用：
+正式活動前，建議在 Firebase Console 的 Realtime Database Rules 套用專案內的 `firebase-database.rules.json`。該檔已限制可寫欄位、玩家資料形狀、隊伍值、賽道位置與名稱長度，比全開 read/write 更適合公開活動網址。
+
+這份 rules 仍屬免登入活動用防護，不能真正驗證主持人身份。若未來需要主持人密碼、登入或後台管理，建議加入 Firebase Auth 或 Cloud Functions。
+
+短期本機測試若要排除 rules 造成的問題，可暫時使用：
 
 ```json
 {
@@ -207,7 +219,7 @@ const app = initializeApp(firebaseConfig);
 }
 ```
 
-這適合短期活動測試。若網址長期公開，請改成更嚴格的規則。
+這只適合短期測試。網址長期公開時不要維持全開寫入。
 
 ## 實際遊戲操作
 
@@ -238,7 +250,7 @@ const app = initializeApp(firebaseConfig);
 
 - 現場 Wi-Fi 與行動網路是否穩定。
 - 玩家是否都使用 GitHub Pages 網址，不要混用本機網址或舊部署。
-- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260613-4` 或重新掃 QR code。
+- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260614-1` 或重新掃 QR code。
 - 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
 
 ## 測試紀錄
@@ -246,12 +258,16 @@ const app = initializeApp(firebaseConfig);
 最近完成的自動化檢查：
 
 - `node --check app.js` 通過。
+- `git diff --check` 通過。
+- `firebase-database.rules.json` JSON parse 通過。
+- 本機首頁、主持頁與加入頁 URL 回 `200`。
 - GitHub Pages 首頁、主持頁與加入頁 URL 回 `200`。
-- 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 都可載入。
+- 部署版 HTML 已更新到 `app.js?v=20260614-1`。
+- 部署版 `app.js?v=20260614-1` 可載入。
 - Firebase 臨時房間流程測試通過：建立房間、玩家資料、分隊、按擊統計、結束比賽與刪除測試房間。
 - Firebase `increment()` 實際寫入測試通過。
 
-仍建議正式活動前用 2-3 支手機實際跑一次掃 QR、加入、開始、按擊與重設流程。
+限制：2026-06-16 這次環境的 in-app Browser 回報不可用，因此未做自動化瀏覽器點擊測試。仍建議正式活動前用 2-3 支手機實際跑一次掃 QR、加入、開始、按擊與重設流程。
 
 ## 畫面特色
 
@@ -306,7 +322,7 @@ http://192.168.x.x:5173
 JavaScript：
 
 ```html
-<script type="module" src="./app.js?v=20260613-4"></script>
+<script type="module" src="./app.js?v=20260614-1"></script>
 ```
 
 CSS：
