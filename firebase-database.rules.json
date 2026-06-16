@@ -1,0 +1,88 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomCode": {
+        ".read": true,
+        "$other": {
+          ".write": false
+        },
+        "roomCode": {
+          ".write": "newData.val() === $roomCode"
+        },
+        "status": {
+          ".write": "newData.isString()",
+          ".validate": "newData.val() === 'lobby' || newData.val() === 'countdown' || newData.val() === 'racing' || newData.val() === 'finished'"
+        },
+        "raceLength": {
+          ".write": "newData.isNumber()",
+          ".validate": "newData.val() >= 60 && newData.val() <= 180"
+        },
+        "positions": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['red', 'blue', 'green'])",
+          "red": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 180"
+          },
+          "blue": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 180"
+          },
+          "green": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 180"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "players": {
+          ".write": true,
+          "$playerId": {
+            ".validate": "newData.hasChildren(['id', 'name', 'team', 'clicks', 'joinedAt']) && newData.child('id').val() === $playerId",
+            "id": {
+              ".validate": "newData.isString()"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 16"
+            },
+            "team": {
+              ".validate": "newData.isString() && (newData.val() === '' || newData.val() === 'red' || newData.val() === 'blue' || newData.val() === 'green')"
+            },
+            "clicks": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "recent": {
+              ".validate": "newData.hasChildren() || newData.val() === null",
+              "$bucket": {
+                ".validate": "newData.isNumber() && newData.val() >= 0"
+              }
+            },
+            "joinedAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "createdAt": {
+          ".write": "newData.isNumber()"
+        },
+        "startedAt": {
+          ".write": "newData.isNumber() || newData.val() === null"
+        },
+        "finishedAt": {
+          ".write": "newData.isNumber() || newData.val() === null"
+        },
+        "winner": {
+          ".write": true,
+          ".validate": "newData.val() === null || newData.val() === 'red' || newData.val() === 'blue' || newData.val() === 'green'"
+        },
+        "countdownEndsAt": {
+          ".write": "newData.isNumber() || newData.val() === null"
+        },
+        "hostId": {
+          ".write": "newData.isString() || newData.val() === null"
+        }
+      }
+    }
+  }
+}

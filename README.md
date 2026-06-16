@@ -6,6 +6,7 @@
 
 - 已可本機執行，並已部署到 GitHub Pages。
 - 已接上 Firebase Realtime Database。
+- 已加入多主持分頁保護，倒數與賽況推進只由開賽分頁執行。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
 - 龍舟包含船頭卡通人物、船身划船小人與移動浪花效果。
@@ -68,7 +69,8 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 2. 新增 Web App。
 3. 建立 Realtime Database，測試階段可先用 test mode。
 4. 把 Firebase Web App config 填進 `firebase-config.js`。
-5. 部署到 GitHub Pages。
+5. 將 `firebase-database.rules.json` 的內容套用到 Realtime Database Rules。
+6. 部署到 GitHub Pages。
 
 `firebase-config.js` 會長得像這樣：
 
@@ -83,6 +85,8 @@ export const firebaseConfig = {
   appId: "..."
 };
 ```
+
+目前專案維持免登入活動流程，因此 `firebase-database.rules.json` 主要限制資料結構與可寫路徑，避免整個 database 被任意寫入。它不能真正驗證誰是主持人；若未來需要主持人密碼、登入或後台管理，建議加入 Firebase Auth 或 Cloud Functions。
 
 ## 建議 Realtime Database Rules
 

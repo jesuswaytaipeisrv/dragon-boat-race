@@ -297,3 +297,62 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - 手機端可以加震動回饋 `navigator.vibrate`，但需注意瀏覽器支援度。
 - 增加「固定活動房間」設定，例如預設 `room=DRAGON`，讓玩家只需輸入名字。
 - 增加可選的音效或終點慶祝畫面。
+
+## 2026-06-14 Codex 修正紀錄
+
+來源：`/Users/garyhuang/dragon-boat-race-code-review.md`。
+
+已確認屬實並完成修正：
+
+- Bug 1：`countdownTimer` 清除後未歸 `null`，已補上。
+- Bug 2：`raceTicker` 清除後未歸 `null`，已補上。
+- Bug 3：多主持頁面會重複推進賽況，已改成開賽分頁寫入 `hostId`，只有該分頁負責倒數轉換與 race ticker。此處沒有採用報告中的 `playerId`，因為同一瀏覽器多分頁會共用 `localStorage` player id；改用 `sessionStorage` 的 `hostSessionId`。
+- Bug 4：玩家畫面重新渲染時舊 `flushTimer` 未清除，已在 `renderPlayer()` 開頭清理。
+- Bug 5：比賽中拖動賽道長度會重設比賽，已限制只有 lobby 狀態可改，並在非 lobby 時停用滑桿。
+- Bug 6：隨機分隊未處理 Firebase 錯誤，已改為 `async/await` 並記錄錯誤。
+- Bug 7：速度窗口邊界使用 `<=`，已改為 `<`。
+- Bug 8：Firebase click bucket 只清一格，已改成批次清理多個過期 bucket。
+- Bug 9：`joinRoom` 有房間初始化競態，已移除加入流程中的 root room `set()`，只寫入玩家節點。
+- Bug 10：本地 store 同步 callback 的潛在 DOM 空值問題，已在 host/player 更新函式加上空值防護。
+- Bug 11：同 tick 同時到終點由隊伍陣列順序決定，已改為同時抵達時先比當下速度，再比總 clicks，最後才用固定隊伍順序作穩定 tie-break。
+- Bug 13：`boatSvg()` 的 `aria-label` 已套用 `escapeHtml()`。
+- Bug 14：倒數期間開始按鈕未 disabled，已補上 countdown 狀態。
+- Bug 15：賽道長度滑桿對實際賽況無效，已改為以 `state.raceLength` 作為實際終點距離，畫面位置再換算為百分比。
+
+安全項目處理：
+
+- 已新增 `firebase-database.rules.json`，限制 Realtime Database 可寫欄位與資料形狀。
+- 這份 rules 仍屬免登入活動用防護，不能真正驗證主持人身份。若要主持人權限、密碼或管理後台，需要加入 Firebase Auth 或 Cloud Functions。
+
+驗證：
+
+- `node --check app.js` 通過。
+- `firebase-database.rules.json` JSON parse 通過。
+- `index.html` 的 `app.js` cache bust 版本已更新為 `v=20260614-1`。
+
+## 2026-06-16 部署前驗證紀錄
+
+目的：確認 2026-06-14 Claude code review 後的修正可提交並部署。
+
+本次確認：
+
+- `git diff --check` 通過，未發現 whitespace error。
+- `node --check app.js` 通過。
+- `firebase-database.rules.json` JSON parse 通過。
+- 本機靜態伺服器檢查通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
+- HTML 檢查確認仍引用 `styles.css?v=20260613-2` 與 `app.js?v=20260614-1`。
+- DOM selector 靜態檢查通過，`app.js` 查找的 `#id` 均存在於 `index.html`。
+- 主要資源檔存在性檢查通過：`app.js`、`styles.css`、`firebase-config.js`。
+
+限制：
+
+- 本次環境的 in-app Browser 回報不可用，因此未做自動化瀏覽器點擊測試。
+- 正式活動前仍建議用 2-3 支手機實測 QR code、輸入名字、分隊、倒數、按擊與重設。
+
+部署方式：
+
+- 提交後推送 `main`。
+- 因 GitHub Pages 目前使用 `gh-pages` 分支發布，再同步推送 `main:gh-pages`。
