@@ -122,8 +122,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-5
-app.js?v=20260617-5
+styles.css?v=20260617-6
+app.js?v=20260617-6
 ```
 
 最新 Claude bug 清單修正：
@@ -150,7 +150,7 @@ Fix stale finished room results
 c5f16c6 Fix race review issues
 ```
 
-目前部署包含 2026-06-14 Claude code review 後的修正、2026-06-16 視覺與互動更新、2026-06-16 Claude review 追修、2026-06-17 固定房間舊 finished 狀態修正、2026-06-17 Claude bug 清單 A/B/C 修正、開始比賽即時回饋修正，以及主持端清空玩家功能。HTML 目前引用 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
+目前部署包含 2026-06-14 Claude code review 後的修正、2026-06-16 視覺與互動更新、2026-06-16 Claude review 追修、2026-06-17 固定房間舊 finished 狀態修正、2026-06-17 Claude bug 清單 A/B/C 修正、開始比賽即時回饋修正，以及主持端清空玩家功能。HTML 目前引用 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
 
 Claude review 中暫不處理的項目也已記錄在 `DEVELOPMENT_LOG.md`：Realtime Database rules 防作弊需 Firebase Auth 或主持人權限機制，屬架構級改動；host ticker transaction 化、停手玩家 recent bucket 清理、賽道長度滑桿回呼干擾目前列為觀察。
 
@@ -280,9 +280,10 @@ const app = initializeApp(firebaseConfig);
 
 - 現場 Wi-Fi 與行動網路是否穩定。
 - 玩家是否都使用 GitHub Pages 網址，不要混用本機網址或舊部署。
-- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260617-5` 或重新掃 QR code。
+- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260617-6` 或重新掃 QR code。
 - 若主持人分頁關閉或當機，請用同一房間重新開主持頁；新版會在舊主持 heartbeat 逾時後接手繼續倒數或推進比賽。
-- 玩家手機若停在倒數畫面，請確認已載入 `app.js?v=20260617-5`；新版會在手機端自行更新倒數並在倒數到期後啟用「划！」。
+- 玩家手機若停在倒數畫面，請確認已載入 `app.js?v=20260617-6`；新版會在手機端自行更新倒數並在倒數到期後啟用「划！」。
+- 玩家輸入姓名後若短暫顯示「正在加入 / 同步中」，請等候數秒；新版會等待 Firebase 同步，不會立刻導回加入頁。
 - 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
 
 ## 測試紀錄
@@ -294,8 +295,8 @@ const app = initializeApp(firebaseConfig);
 - `firebase-database.rules.json` JSON parse 通過。
 - 本機首頁、主持頁與加入頁 URL 回 `200`。
 - GitHub Pages 首頁、主持頁與加入頁 URL 回 `200`。
-- 部署版 HTML 已更新到 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
-- 部署版 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5` 可載入。
+- 部署版 HTML 已更新到 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
+- 部署版 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6` 可載入。
 - 主持端「清空玩家」可刪除 `players` 並重設房間到 lobby。
 - 主持人按「開始比賽」後會立即顯示「正在開始比賽...」；若 Firebase 寫入失敗，畫面會顯示開始失敗提示。
 - 2026-06-17 Claude bug 清單 A/B/C 靜態驗收通過：`hostHeartbeatAt`、接手輪詢、子欄位 room 初始化、rules 欄位與寫入錯誤紀錄皆已存在。
@@ -362,13 +363,13 @@ http://192.168.x.x:5173
 JavaScript：
 
 ```html
-<script type="module" src="./app.js?v=20260617-5"></script>
+<script type="module" src="./app.js?v=20260617-6"></script>
 ```
 
 CSS：
 
 ```html
-<link rel="stylesheet" href="./styles.css?v=20260617-5" />
+<link rel="stylesheet" href="./styles.css?v=20260617-6" />
 ```
 
 或在瀏覽器做 hard reload。

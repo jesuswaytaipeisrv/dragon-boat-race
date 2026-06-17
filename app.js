@@ -29,6 +29,7 @@ const hostLink = document.querySelector("#hostLink");
 const joinLink = document.querySelector("#joinLink");
 const playerIdKey = "dragonBoatPlayerId";
 const playerRoomKey = "dragonBoatRoomCode";
+const recentJoinKey = "dragonBoatRecentJoin";
 const hostSessionIdKey = "dragonBoatHostSessionId";
 const playerId = getOrCreatePlayerId();
 const hostSessionId = getOrCreateHostSessionId();
@@ -146,6 +147,7 @@ function renderJoin() {
         joinedAt: Date.now()
       });
       localStorage.setItem(playerRoomKey, roomCode);
+      markRecentJoin(roomCode);
       window.location.href = makePlayerUrl(roomCode);
     } catch (error) {
       logStoreError("Failed to join room", error);
@@ -311,7 +313,14 @@ function updatePlayer() {
   if (!playerScreen || !playerTeam || !playerStatus || !playerCountdown || !button) return;
 
   if (!player) {
-    window.location.href = `?view=join&room=${encodeURIComponent(state.roomCode)}`;
+    if (isRecentJoinPending(state.roomCode)) {
+      playerTeam.textContent = "正在加入";
+      playerStatus.textContent = "同步中";
+      playerCountdown.textContent = "";
+      button.disabled = true;
+      return;
+    }
+    window.location.href = makeJoinPageUrl(state.roomCode);
     return;
   }
 
@@ -878,7 +887,16 @@ function makeJoinUrl(roomCode) {
 }
 
 function makePlayerUrl(roomCode) {
-  return `?view=player&room=${encodeURIComponent(roomCode)}`;
+  return withCacheParam(`?view=player&room=${encodeURIComponent(roomCode)}`);
+}
+
+function makeJoinPageUrl(roomCode) {
+  return withCacheParam(`?view=join&room=${encodeURIComponent(roomCode)}`);
+}
+
+function withCacheParam(url) {
+  const cache = params.get("cache");
+  return cache ? `${url}&cache=${encodeURIComponent(cache)}` : url;
 }
 
 function updateUrlRoom(roomCode) {
@@ -901,6 +919,23 @@ function getOrCreateHostSessionId() {
   const id = crypto.randomUUID?.() || `host_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   sessionStorage.setItem(hostSessionIdKey, id);
   return id;
+}
+
+function markRecentJoin(roomCode) {
+  sessionStorage.setItem(recentJoinKey, JSON.stringify({
+    roomCode,
+    playerId,
+    until: Date.now() + 5000
+  }));
+}
+
+function isRecentJoinPending(roomCode) {
+  try {
+    const recent = JSON.parse(sessionStorage.getItem(recentJoinKey) || "null");
+    return recent?.roomCode === roomCode && recent?.playerId === playerId && Date.now() < Number(recent.until);
+  } catch {
+    return false;
+  }
 }
 
 function getTeam(teamId) {

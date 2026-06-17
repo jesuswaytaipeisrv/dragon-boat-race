@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-5
-app.js?v=20260617-5
+styles.css?v=20260617-6
+app.js?v=20260617-6
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -651,7 +651,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `index.html`：主持動作區新增「清空玩家」按鈕。
 - `app.js`：新增 `clearPlayers()`，會要求確認後清空 `players`，並將房間重設為 lobby、清空 positions、winner、倒數與 host heartbeat。
 - `app.js`：Firebase store 新增 `clearPlayers()`，使用 `set(rooms/{room}/players, null)` 刪除玩家節點；local store 則改回空 players 物件。
-- `index.html`：資源版本更新為 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
 - `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與操作說明。
 
 驗證：
@@ -659,7 +659,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `node --check app.js` 通過。
 - `python3 -m json.tool firebase-database.rules.json` 通過。
 - `git diff --check` 通過。
-- 靜態檢查確認 `#clearPlayers`、`clearPlayers()`、Firebase/local store `clearPlayers()` 與 `app.js?v=20260617-5` 均存在。
+- 靜態檢查確認 `#clearPlayers`、`clearPlayers()`、Firebase/local store `clearPlayers()` 與 `app.js?v=20260617-6` 均存在。
 - Firebase REST 臨時房間 `CODEX_CLEAR_CHECK` 驗證通過：建立舊玩家、刪除 `players`、重設 room 為 lobby、讀回確認 players 已消失，並刪除測試房間。
 
 後續處理：
@@ -679,7 +679,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 - `app.js`：新增 `playerUiTimer`，玩家頁每 250ms 更新倒數文字、狀態與按鈕 disabled 狀態。
 - `app.js`：新增 `effectivePlayerStatus()` 與 `hasCountdownEnded()`；當本機時間已超過 `countdownEndsAt` 時，玩家端視為 racing，允許按「划！」。
-- `index.html`：資源版本更新為 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
 - `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與排查說明。
 
 驗證：
@@ -689,4 +689,31 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 限制：
 
-- 本環境仍無法做真手機瀏覽器點擊驗收；使用者測試時請以 `?cache=20260617-5` 避開舊快取。
+- 本環境仍無法做真手機瀏覽器點擊驗收；使用者測試時請以 `?cache=20260617-6` 避開舊快取。
+
+## 2026-06-17 玩家加入需第二次修正
+
+來源：使用者回報玩家輸入姓名後，常常要按第二次加入才成功。
+
+原因判斷：
+
+- 玩家加入成功後會立即跳到玩家頁。
+- 玩家頁第一個 Firebase snapshot 有機會還沒包含剛寫入的 player；舊邏輯一看到 `state.players[playerId]` 不存在就立刻導回加入頁。
+- 使用 cache query 測試時，`makePlayerUrl()` 也沒有保留 `cache` 參數，跳頁後可能載到舊版資源。
+
+本次修改：
+
+- `app.js`：加入成功後用 `sessionStorage` 記錄 5 秒 recent join grace period。
+- `app.js`：玩家頁若暫時找不到自己的 player，但仍在 recent join grace period 內，顯示「正在加入 / 同步中」並等待下一次 Firebase 更新，不立即導回加入頁。
+- `app.js`：`makePlayerUrl()` 與玩家不存在時回 join 的 URL 都會保留 `cache` query 參數，避免跳頁後載入舊 JS。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
+- `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與排查說明。
+
+驗證：
+
+- `node --check app.js` 通過。
+- 函式級檢查確認 `markRecentJoin()`、`isRecentJoinPending()`、`makePlayerUrl()` cache 保留與 `makeJoinPageUrl()` 均存在。
+
+限制：
+
+- 本環境仍無法做真手機瀏覽器加入流程點擊驗收；使用者測試時請以 `?cache=20260617-6` 避開舊快取。
