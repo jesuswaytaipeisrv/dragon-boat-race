@@ -339,9 +339,21 @@ function canPaddle() {
 }
 
 async function startRace(roomCode) {
+  const startRaceButton = document.querySelector("#startRace");
+  const raceHeadline = document.querySelector("#raceHeadline");
+  const statusLabel = document.querySelector("#statusLabel");
+
   try {
     const players = Object.values(state.players);
-    if (!players.length || state.status === "countdown" || state.status === "racing") return;
+    if (!players.length) {
+      if (raceHeadline) raceHeadline.textContent = "請先等待玩家加入";
+      return;
+    }
+    if (state.status === "countdown" || state.status === "racing") return;
+
+    if (startRaceButton) startRaceButton.disabled = true;
+    if (statusLabel) statusLabel.textContent = "準備";
+    if (raceHeadline) raceHeadline.textContent = "正在開始比賽...";
 
     const needsTeams = players.some((player) => !player.team);
     if (needsTeams) {
@@ -370,6 +382,9 @@ async function startRace(roomCode) {
     countdownTimer = null;
   } catch (error) {
     logStoreError("Failed to start race", error);
+    if (startRaceButton) startRaceButton.disabled = false;
+    if (statusLabel) statusLabel.textContent = "開始失敗";
+    if (raceHeadline) raceHeadline.textContent = "開始失敗，請檢查網路或 Firebase Rules";
   }
 }
 

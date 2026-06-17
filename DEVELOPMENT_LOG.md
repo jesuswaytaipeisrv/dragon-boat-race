@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-2
-app.js?v=20260617-2
+styles.css?v=20260617-3
+app.js?v=20260617-3
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260617-2` 與 `app.js?v=20260617-2`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-3` 與 `app.js?v=20260617-3`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -610,3 +610,34 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 - 本環境內建瀏覽器不可用，且沒有 Playwright、Puppeteer 或 jsdom，因此尚未自動化驗收「關閉主持頁後新主持頁接手」的真瀏覽器流程。
 - 正式活動前仍建議用兩個主持分頁與 1-2 支手機實測：開始倒數後關掉原主持頁，重開同房間主持頁，確認數秒後倒數或比賽推進會恢復。
+
+## 2026-06-17 開始比賽即時回饋修正
+
+來源：使用者回報按「開始比賽」完全沒反應。
+
+檢查結果：
+
+- 公開 GitHub Pages no-cache 版本已載入 `app.js?v=20260617-2`，且包含 Claude bug A/B/C 修正。
+- 固定 `DRAGON` 房間目前有 2 位玩家且 `status: "finished"`，按鈕理論上不應 disabled。
+- Firebase REST 以臨時房間 `CODEX_START_CHECK` 模擬 `startRace()` 的 update 成功，代表目前 rules 允許 `status: "countdown"`、`countdownEndsAt`、`positions`、`hostId`、`hostHeartbeatAt` 等開始比賽欄位寫入。
+- 函式級測試確認目前 `DRAGON` 型態資料下，`startRace()` 會送出 countdown update。
+
+本次修改：
+
+- `app.js`：`startRace()` 按下後立即在主持畫面顯示「正在開始比賽...」，並暫時停用開始按鈕，避免 Firebase 回寫前看起來完全沒有反應。
+- `app.js`：若沒有玩家，主持畫面會提示「請先等待玩家加入」。
+- `app.js`：若 Firebase 寫入失敗，主持畫面會顯示「開始失敗，請檢查網路或 Firebase Rules」，並重新啟用開始按鈕。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-3` 與 `app.js?v=20260617-3`。
+- `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與操作提示。
+
+驗證：
+
+- `node --check app.js` 通過。
+- `python3 -m json.tool firebase-database.rules.json` 通過。
+- `git diff --check` 通過。
+- Firebase REST 臨時房間 `CODEX_START_CHECK` 建立、開始比賽 update 與刪除通過。
+- 函式級測試確認 `startRace()` 在 finished 且已有玩家狀態會送出 countdown update。
+
+限制：
+
+- 本環境仍無法做真瀏覽器點擊驗收；若使用者畫面仍無反應，請先 hard reload 或用 `?cache=20260617-3` 確認載到新版，並觀察主持畫面是否出現「正在開始比賽...」或失敗提示。
