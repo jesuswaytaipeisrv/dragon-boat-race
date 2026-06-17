@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-4
-app.js?v=20260617-4
+styles.css?v=20260617-5
+app.js?v=20260617-5
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260617-4` 與 `app.js?v=20260617-4`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -651,7 +651,7 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `index.html`：主持動作區新增「清空玩家」按鈕。
 - `app.js`：新增 `clearPlayers()`，會要求確認後清空 `players`，並將房間重設為 lobby、清空 positions、winner、倒數與 host heartbeat。
 - `app.js`：Firebase store 新增 `clearPlayers()`，使用 `set(rooms/{room}/players, null)` 刪除玩家節點；local store 則改回空 players 物件。
-- `index.html`：資源版本更新為 `styles.css?v=20260617-4` 與 `app.js?v=20260617-4`。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
 - `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與操作說明。
 
 驗證：
@@ -659,9 +659,34 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `node --check app.js` 通過。
 - `python3 -m json.tool firebase-database.rules.json` 通過。
 - `git diff --check` 通過。
-- 靜態檢查確認 `#clearPlayers`、`clearPlayers()`、Firebase/local store `clearPlayers()` 與 `app.js?v=20260617-4` 均存在。
+- 靜態檢查確認 `#clearPlayers`、`clearPlayers()`、Firebase/local store `clearPlayers()` 與 `app.js?v=20260617-5` 均存在。
 - Firebase REST 臨時房間 `CODEX_CLEAR_CHECK` 驗證通過：建立舊玩家、刪除 `players`、重設 room 為 lobby、讀回確認 players 已消失，並刪除測試房間。
 
 後續處理：
 
 - 部署完成後會清理固定 `DRAGON` 房間中的舊 players，讓使用者可直接重新加入測試。
+
+## 2026-06-17 玩家端倒數卡住修正
+
+來源：使用者截圖顯示玩家手機停在紅隊畫面，狀態為「準備」、倒數顯示 `1`，按「划！」沒有反應。
+
+原因判斷：
+
+- 玩家頁原本只在 Firebase room state 更新時重畫倒數與按鈕狀態。
+- 倒數期間如果沒有新的 Firebase state push，手機端可能停在最後一次收到的 `1`，`canPaddle()` 仍因 `state.status === "countdown"` 而保持 disabled。
+
+本次修改：
+
+- `app.js`：新增 `playerUiTimer`，玩家頁每 250ms 更新倒數文字、狀態與按鈕 disabled 狀態。
+- `app.js`：新增 `effectivePlayerStatus()` 與 `hasCountdownEnded()`；當本機時間已超過 `countdownEndsAt` 時，玩家端視為 racing，允許按「划！」。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-5` 與 `app.js?v=20260617-5`。
+- `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與排查說明。
+
+驗證：
+
+- `node --check app.js` 通過。
+- 函式級測試確認 countdown 未到期時 `canPaddle()` 為 false，倒數到期後 `canPaddle()` 會變 true。
+
+限制：
+
+- 本環境仍無法做真手機瀏覽器點擊驗收；使用者測試時請以 `?cache=20260617-5` 避開舊快取。

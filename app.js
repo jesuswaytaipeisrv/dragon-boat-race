@@ -37,6 +37,7 @@ let store;
 let state = createEmptyState(params.get("room") || makeRoomCode());
 let unsubscribe = () => {};
 let flushTimer = null;
+let playerUiTimer = null;
 let pendingClicks = 0;
 let optimisticClickTotal = 0;
 let countdownTimer = null;
@@ -155,7 +156,9 @@ function renderJoin() {
 
 function renderPlayer() {
   clearInterval(flushTimer);
+  clearInterval(playerUiTimer);
   flushTimer = null;
+  playerUiTimer = null;
   pendingClicks = 0;
   optimisticClickTotal = 0;
 
@@ -192,6 +195,8 @@ function renderPlayer() {
     pendingClicks = 0;
     store.addClicks(roomCode, playerId, count).catch((error) => logStoreError("Failed to send clicks", error));
   }, FLUSH_MS);
+
+  playerUiTimer = window.setInterval(updatePlayer, 250);
 }
 
 function bindRoom(roomCode) {
@@ -311,9 +316,10 @@ function updatePlayer() {
   }
 
   const team = getTeam(player.team);
+  const effectiveStatus = effectivePlayerStatus(state);
   playerScreen.style.setProperty("--team", team?.color || "#65716d");
   playerTeam.textContent = team?.name || "等待分隊";
-  playerStatus.textContent = STATUS_LABELS[state.status] || "等待";
+  playerStatus.textContent = STATUS_LABELS[effectiveStatus] || "等待";
   playerCountdown.textContent = countdownText(state);
   button.disabled = !canPaddle();
   updatePlayerStats();
@@ -336,7 +342,12 @@ function updatePlayerStats() {
 
 function canPaddle() {
   const player = state.players[playerId];
-  return state.status === "racing" && Boolean(player?.team);
+  return effectivePlayerStatus(state) === "racing" && Boolean(player?.team);
+}
+
+function effectivePlayerStatus(roomState) {
+  if (roomState.status === "countdown" && hasCountdownEnded(roomState)) return "racing";
+  return roomState.status;
 }
 
 async function startRace(roomCode) {
@@ -955,6 +966,10 @@ function countdownText(roomState) {
   if (roomState.status !== "countdown" || !roomState.countdownEndsAt) return "";
   const left = Math.max(0, Math.ceil((roomState.countdownEndsAt - Date.now()) / 1000));
   return left > 0 ? String(left) : "GO";
+}
+
+function hasCountdownEnded(roomState) {
+  return roomState.status === "countdown" && Number(roomState.countdownEndsAt) > 0 && Date.now() >= Number(roomState.countdownEndsAt);
 }
 
 function headlineForState(roomState) {
