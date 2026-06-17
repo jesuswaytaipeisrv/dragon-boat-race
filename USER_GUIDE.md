@@ -286,6 +286,7 @@ const app = initializeApp(firebaseConfig);
 - 玩家輸入姓名後若短暫顯示「正在加入 / 同步中」，請等候數秒；新版會等待 Firebase 同步，不會立刻導回加入頁。
 - 主持人按「重設比賽」後，玩家手機端按擊數應回到 Firebase 的目前值，且非可划狀態的本機 pending clicks 會被丟棄。
 - 若要讓資料庫層也擋掉重設後才抵達的 late click，需將 repo 內 `firebase-database.rules.json` 套用到 Firebase Console。
+- 2026-06-18 使用者回報目前已可正常遊玩；若接下來是正式活動，建議再用 2-3 支手機完整跑一次加入、開始、按擊、重設、再開始。
 - 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
 
 ## 測試紀錄

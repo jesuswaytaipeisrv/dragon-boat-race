@@ -748,3 +748,18 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 - `firebase-database.rules.json` 是 repo 內的 rules 範本；要讓非比賽狀態阻擋 late click 在生產 Firebase 生效，仍需將 rules 套用到 Firebase Console。
 - 本環境沒有 Firebase CLI，這次只能確認 rules JSON 格式與靜態條件，尚未用 Firebase emulator 做 rules 語意驗證。
 - 本環境仍無法做真手機瀏覽器重設瞬間的競態點擊驗收；正式活動前建議用 2-3 支手機跑一次開始、連按、重設、再開始。
+
+## 2026-06-18 收尾與可玩確認
+
+來源：使用者回報目前看起來可以玩了，並要求結束對話前更新文件。
+
+目前結論：
+
+- `main` 與 `gh-pages` 已同步到最新 commit，公開 JS 與 repo 內 `app.js` 一致。
+- 玩家第一次加入同步保護、玩家倒數即時更新、重設比賽後本機按擊歸零與 late click 丟棄已完成。
+- 使用者回報目前可正常遊玩，代表本輪阻礙使用流程的問題已處理完畢。
+
+仍需留意：
+
+- `firebase-database.rules.json` 還是 repo 內規則範本，要讓生產 Firebase 真的套用非比賽狀態限制，仍需手動到 Firebase Console 更新。
+- 正式活動前建議再用 2-3 支手機實跑一次完整流程，確認現場網路與瀏覽器快取沒有額外問題。
