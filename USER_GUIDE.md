@@ -122,8 +122,14 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 目前線上資源版本：
 
 ```text
-styles.css?v=20260616-4
-app.js?v=20260616-4
+styles.css?v=20260617-1
+app.js?v=20260617-1
+```
+
+最新固定房間狀態修正：
+
+```text
+Fix stale finished room results
 ```
 
 最新 Claude review 追修 commit：
@@ -138,7 +144,7 @@ app.js?v=20260616-4
 c5f16c6 Fix race review issues
 ```
 
-目前部署包含 2026-06-14 Claude code review 後的修正、2026-06-16 視覺與互動更新，以及 2026-06-16 Claude review 追修：避免玩家資料被整包覆寫、修正倒數 reset 競態、調整速度上限、玩家端倒數、Fisher-Yates 分隊、`.gitignore` 與 `CLAUDE.md`。HTML 目前引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
+目前部署包含 2026-06-14 Claude code review 後的修正、2026-06-16 視覺與互動更新、2026-06-16 Claude review 追修，以及 2026-06-17 固定房間舊 finished 狀態修正。HTML 目前引用 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1`。
 
 Claude review 中暫不處理的項目也已記錄在 `DEVELOPMENT_LOG.md`：Realtime Database rules 防作弊需 Firebase Auth 或主持人權限機制，屬架構級改動；host ticker transaction 化、停手玩家 recent bucket 清理、賽道長度滑桿回呼干擾目前列為觀察。
 
@@ -267,7 +273,7 @@ const app = initializeApp(firebaseConfig);
 
 - 現場 Wi-Fi 與行動網路是否穩定。
 - 玩家是否都使用 GitHub Pages 網址，不要混用本機網址或舊部署。
-- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260616-4` 或重新掃 QR code。
+- 手機瀏覽器是否載到新版，可在網址後加 `?cache=20260617-1` 或重新掃 QR code。
 - 參加人數很多時，後續可再做主持畫面局部更新與 Firebase listener 拆分。
 
 ## 測試紀錄
@@ -279,8 +285,8 @@ const app = initializeApp(firebaseConfig);
 - `firebase-database.rules.json` JSON parse 通過。
 - 本機首頁、主持頁與加入頁 URL 回 `200`。
 - GitHub Pages 首頁、主持頁與加入頁 URL 回 `200`。
-- 部署版 HTML 已更新到 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
-- 部署版 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4` 可載入。
+- 部署版 HTML 已更新到 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1`。
+- 部署版 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1` 可載入。
 - Firebase 臨時房間流程測試通過：建立房間、玩家資料、分隊、按擊統計、結束比賽與刪除測試房間。
 - Firebase `increment()` 實際寫入測試通過。
 
@@ -343,13 +349,13 @@ http://192.168.x.x:5173
 JavaScript：
 
 ```html
-<script type="module" src="./app.js?v=20260616-4"></script>
+<script type="module" src="./app.js?v=20260617-1"></script>
 ```
 
 CSS：
 
 ```html
-<link rel="stylesheet" href="./styles.css?v=20260616-4" />
+<link rel="stylesheet" href="./styles.css?v=20260617-1" />
 ```
 
 或在瀏覽器做 hard reload。

@@ -647,17 +647,37 @@ function createEmptyState(roomCode) {
 }
 
 function normalizeState(roomState, roomCode) {
-  return {
+  const normalized = {
     ...createEmptyState(roomCode),
     ...roomState,
     roomCode,
     positions: { ...emptyPositions(), ...(roomState?.positions || {}) },
     players: roomState?.players || {}
   };
+  normalized.positions = normalizePositions(normalized);
+  return normalized;
 }
 
 function emptyPositions() {
   return { red: 0, blue: 0, green: 0 };
+}
+
+function normalizePositions(roomState) {
+  const positions = { ...emptyPositions(), ...(roomState.positions || {}) };
+  const finishDistance = getFinishDistance(roomState);
+  const maxPosition = Math.max(...Object.values(positions).map((value) => Number(value) || 0));
+
+  if (roomState.status !== "finished" || maxPosition <= 0 || maxPosition >= finishDistance || maxPosition < FINISH_X_PERCENT) {
+    return positions;
+  }
+
+  const scale = finishDistance / FINISH_X_PERCENT;
+  return Object.fromEntries(
+    Object.entries(positions).map(([teamId, position]) => [
+      teamId,
+      Math.min(finishDistance, (Number(position) || 0) * scale)
+    ])
+  );
 }
 
 function isFirebaseReady(config) {
@@ -758,7 +778,7 @@ function headlineForState(roomState) {
   if (roomState.status === "racing") return "全力划向終點";
   if (roomState.status === "countdown") return "預備起槳";
   if (roomState.status === "finished") {
-    const winner = getTeam(roomState.winner);
+    const winner = getRaceRanking(roomState, getTeamStats(roomState))[0];
     return winner ? `${winner.name} 抵達終點` : "比賽結束";
   }
   return Object.keys(roomState.players).length ? "等待開始" : "等待玩家加入";

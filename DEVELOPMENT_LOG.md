@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260616-4
-app.js?v=20260616-4
+styles.css?v=20260617-1
+app.js?v=20260617-1
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260616-4` 與 `app.js?v=20260616-4`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -538,3 +538,37 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 - Claude 要求 Codex 修改且本輪採納的項目，已寫入 `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md` 與 `CLAUDE.md`。
 - 需要 Firebase Auth 或主持人權限機制的防作弊項目未直接實作，因為會改變免登入活動架構；保留為正式公平競賽前的架構決策。
+
+## 2026-06-17 固定房間 finished 狀態修正
+
+來源：使用者回報龍舟專案「好像壞了」。檢查固定 `DRAGON` 房間 Firebase 資料時，發現房間為 `status: "finished"`，但 `raceLength: 180`、紅藍位置都只有 `92`；同時資料中的 `winner` 是紅隊，但藍隊總按擊較高，造成標題與結果排名可能不一致。
+
+原因判斷：
+
+- 目前程式使用賽道長度作為終點距離；舊資料可能保留早期以 `FINISH_X_PERCENT = 92` 作為終點座標的結果。
+- 2026-06-16 的排名修正已讓結果列表依距離與總按擊排序，但 finished 標題仍直接使用舊的 `winner` 欄位。
+
+本次修改：
+
+- Commit message：`Fix stale finished room results`。
+- `app.js`：新增 `normalizePositions()`，在讀到舊版 finished 資料且最大位置為 92% 視覺終點時，轉換為目前賽道長度座標，避免顯示「未到終點卻 finished」。
+- `app.js`：finished 標題改用 `getRaceRanking()` 的第一名，與結果列表一致，不再盲信舊 `winner` 欄位。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1`，避免手機與 GitHub Pages 快取舊邏輯。
+- `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與操作檢查版本。
+
+驗證：
+
+- `node --check app.js` 通過。
+- `git diff --check` 通過。
+- Firebase rules JSON parse 通過。
+- 本機 HTTP server smoke test 通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/app.js?v=20260617-1` 回 `200 OK`。
+- 函式級案例驗證通過：舊資料 `red=92`、`blue=92`、`raceLength=180` 會正規化為紅藍都到 `180`，且標題與排行榜第一名同為藍隊。
+
+限制：
+
+- 本環境的內建瀏覽器不可用，且沒有 Playwright、Puppeteer 或 jsdom，因此仍未做自動化瀏覽器點擊驗證。
+- 正式活動前仍建議用 2-3 支手機跑一輪掃 QR、加入、分隊、開始、按擊、結束與重設。
