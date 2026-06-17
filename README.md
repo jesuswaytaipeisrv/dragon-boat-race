@@ -16,6 +16,7 @@
 - 主持頁已新增「清空玩家」，可移除固定房間中的舊玩家資料並回到 lobby，方便重新測試。
 - 已修正玩家手機端倒數畫面可能停在「準備 / 1」導致「划！」按鈕無法啟用的問題。
 - 已修正玩家輸入姓名後第一次跳到玩家頁時，Firebase snapshot 尚未同步就被導回加入頁，導致看起來要加入第二次才成功的問題。
+- 已修正重設比賽後玩家手機端本機按擊數不歸零與 late click 可能污染下一場統計的問題；Firebase rules 範本也限制非比賽狀態不可增加 clicks/recent。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
 - 龍舟包含船頭卡通人物、船身划船小人、誇張浪花、湖面魚跳與終點前領隊奮力表情。
@@ -40,8 +41,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-6
-app.js?v=20260617-6
+styles.css?v=20260617-7
+app.js?v=20260617-7
 ```
 
 最新 Claude bug 清單修正：
@@ -154,7 +155,7 @@ export const firebaseConfig = {
 
 目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
 
-2026-06-17 清空玩家功能修正後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
+2026-06-17 重設計數修正後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260617-7` 與 `app.js?v=20260617-7`。
 
 若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 

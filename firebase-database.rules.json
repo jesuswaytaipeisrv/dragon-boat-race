@@ -47,12 +47,12 @@
               ".validate": "newData.isString() && (newData.val() === '' || newData.val() === 'red' || newData.val() === 'blue' || newData.val() === 'green')"
             },
             "clicks": {
-              ".validate": "newData.isNumber() && newData.val() >= 0"
+              ".validate": "newData.isNumber() && newData.val() >= 0 && (newData.val() === 0 || (data.exists() && newData.val() <= data.val()) || root.child('rooms/'+$roomCode+'/status').val() === 'countdown' || root.child('rooms/'+$roomCode+'/status').val() === 'racing')"
             },
             "recent": {
               ".validate": "newData.hasChildren() || newData.val() === null",
               "$bucket": {
-                ".validate": "newData.isNumber() && newData.val() >= 0"
+                ".validate": "newData.val() === null || (newData.isNumber() && newData.val() >= 0 && (root.child('rooms/'+$roomCode+'/status').val() === 'countdown' || root.child('rooms/'+$roomCode+'/status').val() === 'racing'))"
               }
             },
             "joinedAt": {

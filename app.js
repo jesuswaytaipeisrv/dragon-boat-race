@@ -193,6 +193,11 @@ function renderPlayer() {
 
   flushTimer = window.setInterval(() => {
     if (pendingClicks <= 0) return;
+    if (!canPaddle()) {
+      pendingClicks = 0;
+      updatePlayerStats();
+      return;
+    }
     const count = pendingClicks;
     pendingClicks = 0;
     store.addClicks(roomCode, playerId, count).catch((error) => logStoreError("Failed to send clicks", error));
@@ -330,8 +335,15 @@ function updatePlayer() {
   playerTeam.textContent = team?.name || "等待分隊";
   playerStatus.textContent = STATUS_LABELS[effectiveStatus] || "等待";
   playerCountdown.textContent = countdownText(state);
+  syncLocalClickState(player, state);
   button.disabled = !canPaddle();
   updatePlayerStats();
+}
+
+function syncLocalClickState(player, roomState) {
+  if (roomState.status !== "lobby") return;
+  pendingClicks = 0;
+  optimisticClickTotal = player?.clicks || 0;
 }
 
 function updatePlayerStats() {

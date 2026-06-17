@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-6
-app.js?v=20260617-6
+styles.css?v=20260617-7
+app.js?v=20260617-7
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260617-6` 與 `app.js?v=20260617-6`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-7` 與 `app.js?v=20260617-7`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -717,3 +717,34 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 限制：
 
 - 本環境仍無法做真手機瀏覽器加入流程點擊驗收；使用者測試時請以 `?cache=20260617-6` 避開舊快取。
+
+## 2026-06-17 重設比賽後玩家計數歸零修正
+
+來源：使用者詢問主持人按「重設比賽」後，如果使用者手機畫面的按擊次數沒有重設，是否會影響結果。
+
+原因判斷：
+
+- 主持端重設會把 Firebase 裡每位玩家的 `clicks` 與 `recent` 歸零，並清空隊伍位置、勝負與倒數狀態。
+- 玩家手機端另有本機樂觀計數 `optimisticClickTotal` 與尚未送出的 `pendingClicks`，舊版在 room 回到 lobby 時沒有同步歸零。
+- 因此手機畫面可能繼續顯示上一場次數；若重設當下剛好還有未送出的批次點擊，也可能在收到 reset 前後被送出，污染下一場統計。
+
+本次修改：
+
+- `app.js`：flush timer 送出前會重新檢查 `canPaddle()`；若目前不是可划狀態，直接丟棄本機 pending clicks 並重畫統計。
+- `app.js`：新增 `syncLocalClickState()`，玩家端收到 room 狀態回到 lobby 時，會把 `pendingClicks` 清為 0，並把 `optimisticClickTotal` 對齊 Firebase 的 `player.clicks`。
+- `firebase-database.rules.json`：`clicks` 增加時必須在 `countdown` 或 `racing` 狀態；歸零或下降仍允許，方便主持人重設。
+- `firebase-database.rules.json`：`recent` bucket 增加時也必須在 `countdown` 或 `racing` 狀態，null 清理仍允許。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-7` 與 `app.js?v=20260617-7`。
+
+驗證：
+
+- `node --check app.js` 通過。
+- `python3 -m json.tool firebase-database.rules.json` 通過。
+- `git diff --check` 通過。
+- 靜態檢查確認 `syncLocalClickState()`、flush 前 `canPaddle()` 檢查、`app.js?v=20260617-7` 與 rules 中的 `status` 條件均存在。
+
+限制：
+
+- `firebase-database.rules.json` 是 repo 內的 rules 範本；要讓非比賽狀態阻擋 late click 在生產 Firebase 生效，仍需將 rules 套用到 Firebase Console。
+- 本環境沒有 Firebase CLI，這次只能確認 rules JSON 格式與靜態條件，尚未用 Firebase emulator 做 rules 語意驗證。
+- 本環境仍無法做真手機瀏覽器重設瞬間的競態點擊驗收；正式活動前建議用 2-3 支手機跑一次開始、連按、重設、再開始。
