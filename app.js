@@ -19,6 +19,8 @@ const RECENT_BUCKET_MS = 1000;
 const FLUSH_MS = 420;
 const RACE_TICK_MS = 500;
 const SPEED_BOOST_CAP = 8;
+const HOST_HEARTBEAT_MS = 1000;
+const HOST_TAKEOVER_TIMEOUT_MS = 3000;
 
 const params = new URLSearchParams(window.location.search);
 const view = params.get("view") || "host";
@@ -39,6 +41,9 @@ let pendingClicks = 0;
 let optimisticClickTotal = 0;
 let countdownTimer = null;
 let raceTicker = null;
+let hostTakeoverTimer = null;
+let hostClaimInFlight = false;
+let lastHostHeartbeatAt = 0;
 
 boot();
 
@@ -110,7 +115,7 @@ function renderHost() {
       winner: null,
       status: "lobby",
       finishedAt: null
-    });
+    }).catch((error) => logStoreError("Failed to update race length", error));
   });
 }
 
@@ -129,16 +134,21 @@ function renderJoin() {
     if (!roomCode || !name) return;
 
     hint.textContent = "正在加入...";
-    await store.joinRoom(roomCode, {
-      id: playerId,
-      name,
-      team: "",
-      clicks: 0,
-      recent: {},
-      joinedAt: Date.now()
-    });
-    localStorage.setItem(playerRoomKey, roomCode);
-    window.location.href = makePlayerUrl(roomCode);
+    try {
+      await store.joinRoom(roomCode, {
+        id: playerId,
+        name,
+        team: "",
+        clicks: 0,
+        recent: {},
+        joinedAt: Date.now()
+      });
+      localStorage.setItem(playerRoomKey, roomCode);
+      window.location.href = makePlayerUrl(roomCode);
+    } catch (error) {
+      logStoreError("Failed to join room", error);
+      hint.textContent = "加入失敗，請重新試一次。";
+    }
   });
 }
 
@@ -179,7 +189,7 @@ function renderPlayer() {
     if (pendingClicks <= 0) return;
     const count = pendingClicks;
     pendingClicks = 0;
-    store.addClicks(roomCode, playerId, count);
+    store.addClicks(roomCode, playerId, count).catch((error) => logStoreError("Failed to send clicks", error));
   }, FLUSH_MS);
 }
 
@@ -329,84 +339,105 @@ function canPaddle() {
 }
 
 async function startRace(roomCode) {
-  const players = Object.values(state.players);
-  if (!players.length || state.status === "countdown" || state.status === "racing") return;
+  try {
+    const players = Object.values(state.players);
+    if (!players.length || state.status === "countdown" || state.status === "racing") return;
 
-  const needsTeams = players.some((player) => !player.team);
-  if (needsTeams) {
-    const shuffled = shufflePlayers(players);
-    const updates = {};
-    shuffled.forEach((player, index) => {
-      updates[player.id] = { ...player, team: TEAMS[index % TEAMS.length].id };
+    const needsTeams = players.some((player) => !player.team);
+    if (needsTeams) {
+      const shuffled = shufflePlayers(players);
+      const updates = {};
+      shuffled.forEach((player, index) => {
+        updates[player.id] = { ...player, team: TEAMS[index % TEAMS.length].id };
+      });
+      await store.setPlayers(roomCode, updates);
+    }
+
+    const now = Date.now();
+    lastHostHeartbeatAt = now;
+    await store.updateRoom(roomCode, {
+      status: "countdown",
+      countdownEndsAt: now + 3200,
+      positions: emptyPositions(),
+      startedAt: null,
+      finishedAt: null,
+      winner: null,
+      hostId: hostSessionId,
+      hostHeartbeatAt: now
     });
-    await store.setPlayers(roomCode, updates);
+
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  } catch (error) {
+    logStoreError("Failed to start race", error);
   }
-
-  await store.updateRoom(roomCode, {
-    status: "countdown",
-    countdownEndsAt: Date.now() + 3200,
-    positions: emptyPositions(),
-    startedAt: null,
-    finishedAt: null,
-    winner: null,
-    hostId: hostSessionId
-  });
-
-  clearInterval(countdownTimer);
-  countdownTimer = null;
 }
 
 function runRaceTicker(roomCode) {
   clearInterval(raceTicker);
   raceTicker = window.setInterval(async () => {
-    if (!isHostOwner(state)) {
-      clearInterval(raceTicker);
-      raceTicker = null;
-      return;
-    }
-
-    if (state.status !== "racing") {
-      clearInterval(raceTicker);
-      raceTicker = null;
-      return;
-    }
-
-    const teams = getTeamStats(state);
-    const nextPositions = { ...state.positions };
-    const finishDistance = getFinishDistance(state);
-    const finishers = [];
-
-    TEAMS.forEach((team) => {
-      const stats = teams[team.id];
-      const pace = stats.members ? stats.speed / Math.max(1, stats.members) : 0;
-      const boost = pace > 0 ? Math.min(SPEED_BOOST_CAP, pace) : 0;
-      const nextPosition = Math.min(finishDistance, (nextPositions[team.id] || 0) + boost);
-      nextPositions[team.id] = nextPosition;
-      if (nextPosition >= finishDistance) {
-        finishers.push({ id: team.id, speed: stats.speed, clicks: stats.clicks });
+    try {
+      if (!isHostOwner(state)) {
+        clearInterval(raceTicker);
+        raceTicker = null;
+        return;
       }
-    });
 
-    if (finishers.length) {
-      finishers.sort((a, b) => b.clicks - a.clicks || b.speed - a.speed || teamOrder(a.id) - teamOrder(b.id));
+      if (state.status !== "racing") {
+        clearInterval(raceTicker);
+        raceTicker = null;
+        return;
+      }
+
+      const teams = getTeamStats(state);
+      const nextPositions = { ...state.positions };
+      const finishDistance = getFinishDistance(state);
+      const finishers = [];
+
+      TEAMS.forEach((team) => {
+        const stats = teams[team.id];
+        const pace = stats.members ? stats.speed / Math.max(1, stats.members) : 0;
+        const boost = pace > 0 ? Math.min(SPEED_BOOST_CAP, pace) : 0;
+        const nextPosition = Math.min(finishDistance, (nextPositions[team.id] || 0) + boost);
+        nextPositions[team.id] = nextPosition;
+        if (nextPosition >= finishDistance) {
+          finishers.push({ id: team.id, speed: stats.speed, clicks: stats.clicks });
+        }
+      });
+
+      const now = Date.now();
+      lastHostHeartbeatAt = now;
+
+      if (finishers.length) {
+        finishers.sort((a, b) => b.clicks - a.clicks || b.speed - a.speed || teamOrder(a.id) - teamOrder(b.id));
+        await store.updateRoom(roomCode, {
+          positions: nextPositions,
+          status: "finished",
+          winner: finishers[0].id,
+          finishedAt: now,
+          hostHeartbeatAt: now
+        });
+        clearInterval(raceTicker);
+        raceTicker = null;
+        return;
+      }
+
       await store.updateRoom(roomCode, {
         positions: nextPositions,
-        status: "finished",
-        winner: finishers[0].id,
-        finishedAt: Date.now()
+        hostId: hostSessionId,
+        hostHeartbeatAt: now
       });
-      clearInterval(raceTicker);
-      raceTicker = null;
-      return;
+    } catch (error) {
+      logStoreError("Failed to update race ticker", error);
     }
-
-    await store.updateRoom(roomCode, { positions: nextPositions });
   }, RACE_TICK_MS);
 }
 
 function syncHostTimers(roomCode) {
   const countdown = document.querySelector("#countdown");
   if (!countdown) return;
+  syncHostTakeoverTimer(roomCode);
+  claimHostIfStale(roomCode);
 
   if (state.status === "countdown" && state.countdownEndsAt) {
     countdown.textContent = countdownText(state);
@@ -419,23 +450,32 @@ function syncHostTimers(roomCode) {
 
     if (!countdownTimer) {
       countdownTimer = window.setInterval(async () => {
-        if (state.status !== "countdown" || !state.countdownEndsAt) {
-          clearInterval(countdownTimer);
-          countdownTimer = null;
-          return;
-        }
-        if (Date.now() >= state.countdownEndsAt) {
-          clearInterval(countdownTimer);
-          countdownTimer = null;
-          if (!isHostOwner(state)) return;
-          await store.updateRoom(roomCode, {
-            status: "racing",
-            startedAt: Date.now(),
-            countdownEndsAt: null
-          });
-          runRaceTicker(roomCode);
-        } else {
-          updateHost();
+        try {
+          if (state.status !== "countdown" || !state.countdownEndsAt) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            return;
+          }
+          if (Date.now() >= state.countdownEndsAt) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            if (!isHostOwner(state)) return;
+            const now = Date.now();
+            lastHostHeartbeatAt = now;
+            await store.updateRoom(roomCode, {
+              status: "racing",
+              startedAt: now,
+              countdownEndsAt: null,
+              hostId: hostSessionId,
+              hostHeartbeatAt: now
+            });
+            runRaceTicker(roomCode);
+          } else {
+            sendHostHeartbeat(roomCode);
+            updateHost();
+          }
+        } catch (error) {
+          logStoreError("Failed to advance countdown", error);
         }
       }, 250);
     }
@@ -460,24 +500,71 @@ function syncHostTimers(roomCode) {
 }
 
 async function resetRace(roomCode) {
-  clearInterval(raceTicker);
-  clearInterval(countdownTimer);
-  raceTicker = null;
-  countdownTimer = null;
-  const players = {};
-  Object.values(state.players).forEach((player) => {
-    players[player.id] = { ...player, clicks: 0, recent: {} };
-  });
-  await store.setPlayers(roomCode, players);
-  await store.updateRoom(roomCode, {
-    status: "lobby",
-    positions: emptyPositions(),
-    startedAt: null,
-    finishedAt: null,
-    winner: null,
-    countdownEndsAt: null,
-    hostId: null
-  });
+  try {
+    clearInterval(raceTicker);
+    clearInterval(countdownTimer);
+    clearInterval(hostTakeoverTimer);
+    raceTicker = null;
+    countdownTimer = null;
+    hostTakeoverTimer = null;
+    const players = {};
+    Object.values(state.players).forEach((player) => {
+      players[player.id] = { ...player, clicks: 0, recent: {} };
+    });
+    await store.setPlayers(roomCode, players);
+    await store.updateRoom(roomCode, {
+      status: "lobby",
+      positions: emptyPositions(),
+      startedAt: null,
+      finishedAt: null,
+      winner: null,
+      countdownEndsAt: null,
+      hostId: null,
+      hostHeartbeatAt: null
+    });
+  } catch (error) {
+    logStoreError("Failed to reset race", error);
+  }
+}
+
+function claimHostIfStale(roomCode) {
+  if (view !== "host" || isHostOwner(state) || !isRaceControlledStatus(state.status) || !isHostStale(state) || hostClaimInFlight) {
+    return;
+  }
+
+  hostClaimInFlight = true;
+  const now = Date.now();
+  lastHostHeartbeatAt = now;
+  store.updateRoom(roomCode, {
+    hostId: hostSessionId,
+    hostHeartbeatAt: now
+  })
+    .catch((error) => logStoreError("Failed to claim host ownership", error))
+    .finally(() => {
+      hostClaimInFlight = false;
+    });
+}
+
+function syncHostTakeoverTimer(roomCode) {
+  if (view !== "host" || isHostOwner(state) || !isRaceControlledStatus(state.status)) {
+    clearInterval(hostTakeoverTimer);
+    hostTakeoverTimer = null;
+    return;
+  }
+
+  if (!hostTakeoverTimer) {
+    hostTakeoverTimer = window.setInterval(() => claimHostIfStale(roomCode), 500);
+  }
+}
+
+function sendHostHeartbeat(roomCode) {
+  if (!isHostOwner(state) || Date.now() - lastHostHeartbeatAt < HOST_HEARTBEAT_MS) return;
+  const now = Date.now();
+  lastHostHeartbeatAt = now;
+  store.updateRoom(roomCode, {
+    hostId: hostSessionId,
+    hostHeartbeatAt: now
+  }).catch((error) => logStoreError("Failed to update host heartbeat", error));
 }
 
 function getTeamStats(roomState) {
@@ -536,9 +623,17 @@ async function createFirebaseStore() {
     watchRoom(roomCode, callback) {
       const roomRef = ref(db, `rooms/${roomCode}`);
       get(roomRef).then((snapshot) => {
-        if (!snapshot.exists()) set(roomRef, createEmptyState(roomCode));
-      });
-      return onValue(roomRef, (snapshot) => callback(snapshot.val() || createEmptyState(roomCode)));
+        const patch = snapshot.exists()
+          ? createMissingRoomPatch(snapshot.val(), roomCode)
+          : createInitialRoomPatch(roomCode);
+        if (Object.keys(patch).length) return update(roomRef, patch);
+        return null;
+      }).catch((error) => logStoreError("Failed to initialize room", error));
+      return onValue(
+        roomRef,
+        (snapshot) => callback(snapshot.val() || createEmptyState(roomCode)),
+        (error) => logStoreError("Failed to watch room", error)
+      );
     },
     async joinRoom(roomCode, player) {
       const roomRef = ref(db, `rooms/${roomCode}`);
@@ -642,8 +737,33 @@ function createEmptyState(roomCode) {
     finishedAt: null,
     winner: null,
     countdownEndsAt: null,
-    hostId: null
+    hostId: null,
+    hostHeartbeatAt: null
   };
+}
+
+function createInitialRoomPatch(roomCode) {
+  const state = createEmptyState(roomCode);
+  return {
+    roomCode: state.roomCode,
+    status: state.status,
+    raceLength: state.raceLength,
+    positions: state.positions,
+    createdAt: state.createdAt,
+    startedAt: state.startedAt,
+    finishedAt: state.finishedAt,
+    winner: state.winner,
+    countdownEndsAt: state.countdownEndsAt,
+    hostId: state.hostId,
+    hostHeartbeatAt: state.hostHeartbeatAt
+  };
+}
+
+function createMissingRoomPatch(roomState, roomCode) {
+  const initial = createInitialRoomPatch(roomCode);
+  return Object.fromEntries(
+    Object.entries(initial).filter(([key]) => roomState?.[key] === undefined)
+  );
 }
 
 function normalizeState(roomState, roomCode) {
@@ -738,6 +858,20 @@ function getPositionPercent(position, roomState) {
 
 function isHostOwner(roomState) {
   return roomState.hostId === hostSessionId;
+}
+
+function isRaceControlledStatus(status) {
+  return status === "countdown" || status === "racing";
+}
+
+function isHostStale(roomState) {
+  if (!isRaceControlledStatus(roomState.status)) return false;
+  const heartbeatAt = Number(roomState.hostHeartbeatAt);
+  return !roomState.hostId || !Number.isFinite(heartbeatAt) || Date.now() - heartbeatAt > HOST_TAKEOVER_TIMEOUT_MS;
+}
+
+function logStoreError(message, error) {
+  console.error(message, error);
 }
 
 function teamOrder(teamId) {

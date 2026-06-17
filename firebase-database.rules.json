@@ -81,6 +81,9 @@
         },
         "hostId": {
           ".write": "newData.isString() || newData.val() === null"
+        },
+        "hostHeartbeatAt": {
+          ".write": "newData.isNumber() || newData.val() === null"
         }
       }
     }

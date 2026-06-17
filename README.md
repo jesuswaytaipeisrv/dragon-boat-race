@@ -11,6 +11,7 @@
 - 已完成 2026-06-16 Claude review 追修：避免玩家資料被整包覆寫、修正倒數 reset 競態、調整速度上限、加入玩家端倒數、改 Fisher-Yates 分隊，並新增 `.gitignore` 與 `CLAUDE.md`。
 - 已改善玩家按「划！」後的本機即時數字回饋，減少 Firebase 批次送出造成的初期延遲感。
 - 已修正舊版固定房間資料可能出現「未到新賽道長度卻顯示 finished」與標題/排行榜第一名不一致的問題。
+- 已修正 2026-06-17 Claude bug 清單 A/B/C：主持分頁關閉後可由新主持頁接手、strict rules 下新房間初始化改用子欄位寫入並補齊缺少欄位、Firebase 寫入失敗會記錄到 console。
 - 主持頁可顯示房間碼、QR code、三條賽道與龍舟。
 - 玩家頁可用手機加入、顯示隊伍顏色並連按「划！」。
 - 龍舟包含船頭卡通人物、船身划船小人、誇張浪花、湖面魚跳與終點前領隊奮力表情。
@@ -35,8 +36,14 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-1
-app.js?v=20260617-1
+styles.css?v=20260617-2
+app.js?v=20260617-2
+```
+
+最新 Claude bug 清單修正：
+
+```text
+Fix host takeover and strict room init
 ```
 
 最新固定房間狀態修正：
@@ -143,7 +150,7 @@ export const firebaseConfig = {
 
 目前 repo 已部署。此專案現在使用 `gh-pages` 分支發布 GitHub Pages，`main` 與 `gh-pages` 目前同步在同一個 commit。
 
-2026-06-17 固定房間舊 finished 狀態修正後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1`。
+2026-06-17 Claude bug 清單 A/B/C 修正後，請確認 GitHub Pages HTML 引用 `styles.css?v=20260617-2` 與 `app.js?v=20260617-2`。
 
 若重新部署，最簡單的做法是建立一個新的 GitHub repo，並把 `dragon-boat-race` 裡面的檔案放在 repo 根目錄。
 

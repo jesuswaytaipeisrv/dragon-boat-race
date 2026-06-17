@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-1
-app.js?v=20260617-1
+styles.css?v=20260617-2
+app.js?v=20260617-2
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260617-1` 與 `app.js?v=20260617-1`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-2` 與 `app.js?v=20260617-2`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -572,3 +572,41 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 
 - 本環境的內建瀏覽器不可用，且沒有 Playwright、Puppeteer 或 jsdom，因此仍未做自動化瀏覽器點擊驗證。
 - 正式活動前仍建議用 2-3 支手機跑一輪掃 QR、加入、分隊、開始、按擊、結束與重設。
+
+## 2026-06-17 Claude BUGS_TODO A/B/C 修正
+
+來源：`/Users/garyhuang/Documents/Claude/Projects/dragon-boat-race/BUGS_TODO_2026-06-17.md`。
+
+本次修正：
+
+- Bug A：新增 `hostHeartbeatAt`、`HOST_HEARTBEAT_MS`、`HOST_TAKEOVER_TIMEOUT_MS`、`claimHostIfStale()` 與 `syncHostTakeoverTimer()`。開賽主持頁會在倒數與比賽推進時更新 heartbeat；若主持頁關閉或當機，新主持頁會在舊 heartbeat 逾時後接手 `hostId`，再由 watch 回呼確認 owner 後繼續倒數或 race ticker。
+- Bug B：Firebase 新房間初始化由 `set(roomRef, createEmptyState(roomCode))` 改為子欄位 `update()`；若 room 不存在，使用 `createInitialRoomPatch()` 建立基本欄位；若玩家先加入導致 room 已存在但缺基本欄位，使用 `createMissingRoomPatch()` 補齊，不覆蓋既有 active room 狀態。
+- Bug B：`firebase-database.rules.json` 新增 `hostHeartbeatAt` 欄位 `.write` 規則，允許數字或 null。
+- Bug C：新增 `logStoreError()`，並替加入房間、賽道長度更新、按擊送出、開始比賽、倒數轉換、race ticker、重設比賽、房間初始化與 room listener 補上 catch/log，避免 Firebase 寫入失敗無聲。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-2` 與 `app.js?v=20260617-2`。
+- `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態、操作提示與驗證紀錄。
+
+驗證：
+
+- `node --check app.js` 通過。
+- `python3 -m json.tool firebase-database.rules.json` 通過。
+- `git diff --check` 通過。
+- 本機 HTTP server smoke test 通過：
+  - `http://127.0.0.1:5173/` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=host&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/?view=join&room=DRAGON` 回 `200 OK`。
+  - `http://127.0.0.1:5173/app.js?v=20260617-2` 回 `200 OK`。
+- Firebase REST 臨時房間 `CODEX_BUG_CHECK` 寫入、讀回與刪除通過，包含 `hostHeartbeatAt` 欄位。
+- Claude bug A/B/C 靜態驗收通過：
+  - `hostHeartbeatAt` 存在。
+  - `HOST_TAKEOVER_TIMEOUT_MS` 與 `claimHostIfStale()` 存在。
+  - `hostTakeoverTimer` 與 `syncHostTakeoverTimer()` 存在，避免新主持頁開啟時 heartbeat 尚未逾時但之後沒有 state 更新而無法接手。
+  - root room `set(roomRef, createEmptyState(roomCode))` 已移除。
+  - `createInitialRoomPatch()`、`createMissingRoomPatch()` 與子欄位 `update(roomRef, patch)` 已存在。
+  - rules 已包含 `hostHeartbeatAt`。
+  - `catch` 數量增加到 12，`console.error` 統一透過 `logStoreError()` 與既有分隊錯誤紀錄。
+
+限制：
+
+- 本環境內建瀏覽器不可用，且沒有 Playwright、Puppeteer 或 jsdom，因此尚未自動化驗收「關閉主持頁後新主持頁接手」的真瀏覽器流程。
+- 正式活動前仍建議用兩個主持分頁與 1-2 支手機實測：開始倒數後關掉原主持頁，重開同房間主持頁，確認數秒後倒數或比賽推進會恢復。
