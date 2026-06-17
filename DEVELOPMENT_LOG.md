@@ -165,8 +165,8 @@ https://jesuswaytaipeisrv.github.io/dragon-boat-race/?view=join&room=DRAGON
 目前線上資源版本：
 
 ```text
-styles.css?v=20260617-3
-app.js?v=20260617-3
+styles.css?v=20260617-4
+app.js?v=20260617-4
 ```
 
 因為當時環境沒有 GitHub CLI，且 Chrome 沒有可用的 Codex Chrome Extension，所以 Pages 是透過推送 `gh-pages` 分支啟用。2026-06-16 再次以 `git push origin main` 與 `git push origin main:gh-pages` 部署。部署後需確認 GitHub Pages 回 `200 OK`，且 HTML 引用最新的 `styles.css` 與 `app.js` cache-busting 版本。
@@ -223,7 +223,7 @@ http://192.168.1.109:5173/?view=join&room=MXOU
 - `git diff --check` 通過。
 - `node --check app.js` 通過。
 - `firebase-database.rules.json` JSON parse 通過。
-- GitHub Pages 首頁引用 `styles.css?v=20260617-3` 與 `app.js?v=20260617-3`。
+- GitHub Pages 首頁引用 `styles.css?v=20260617-4` 與 `app.js?v=20260617-4`。
 - 部署版 `app.js`、`styles.css`、Firebase SDK 與 QR code API 均回 `200`。
 - 本機 HTTP server smoke test 通過：首頁、主持頁與玩家加入頁均回 `200`。
 - DOM id 對應檢查通過，`app.js` 查找的元素與 template 都存在。
@@ -641,3 +641,27 @@ http://127.0.0.1:5173/?view=host&room=LIVEO9&wake=1
 限制：
 
 - 本環境仍無法做真瀏覽器點擊驗收；若使用者畫面仍無反應，請先 hard reload 或用 `?cache=20260617-3` 確認載到新版，並觀察主持畫面是否出現「正在開始比賽...」或失敗提示。
+
+## 2026-06-17 清空舊玩家功能
+
+來源：使用者回報固定房間開啟後已有兩個舊使用者，主持頁無法刪除，導致無法重新測試。
+
+本次修改：
+
+- `index.html`：主持動作區新增「清空玩家」按鈕。
+- `app.js`：新增 `clearPlayers()`，會要求確認後清空 `players`，並將房間重設為 lobby、清空 positions、winner、倒數與 host heartbeat。
+- `app.js`：Firebase store 新增 `clearPlayers()`，使用 `set(rooms/{room}/players, null)` 刪除玩家節點；local store 則改回空 players 物件。
+- `index.html`：資源版本更新為 `styles.css?v=20260617-4` 與 `app.js?v=20260617-4`。
+- `README.md`、`USER_GUIDE.md`、`DEVELOPMENT_LOG.md`：同步目前狀態與操作說明。
+
+驗證：
+
+- `node --check app.js` 通過。
+- `python3 -m json.tool firebase-database.rules.json` 通過。
+- `git diff --check` 通過。
+- 靜態檢查確認 `#clearPlayers`、`clearPlayers()`、Firebase/local store `clearPlayers()` 與 `app.js?v=20260617-4` 均存在。
+- Firebase REST 臨時房間 `CODEX_CLEAR_CHECK` 驗證通過：建立舊玩家、刪除 `players`、重設 room 為 lobby、讀回確認 players 已消失，並刪除測試房間。
+
+後續處理：
+
+- 部署完成後會清理固定 `DRAGON` 房間中的舊 players，讓使用者可直接重新加入測試。

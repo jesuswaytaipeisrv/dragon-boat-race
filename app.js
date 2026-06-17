@@ -102,6 +102,7 @@ function renderHost() {
 
   document.querySelector("#startRace").addEventListener("click", () => startRace(roomCode));
   document.querySelector("#resetRace").addEventListener("click", () => resetRace(roomCode));
+  document.querySelector("#clearPlayers").addEventListener("click", () => clearPlayers(roomCode));
 
   raceLength.addEventListener("input", () => {
     raceLengthValue.textContent = `${raceLength.value} 公尺`;
@@ -542,6 +543,32 @@ async function resetRace(roomCode) {
   }
 }
 
+async function clearPlayers(roomCode) {
+  if (!window.confirm("確定要清空所有玩家嗎？")) return;
+
+  try {
+    clearInterval(raceTicker);
+    clearInterval(countdownTimer);
+    clearInterval(hostTakeoverTimer);
+    raceTicker = null;
+    countdownTimer = null;
+    hostTakeoverTimer = null;
+    await store.clearPlayers(roomCode);
+    await store.updateRoom(roomCode, {
+      status: "lobby",
+      positions: emptyPositions(),
+      startedAt: null,
+      finishedAt: null,
+      winner: null,
+      countdownEndsAt: null,
+      hostId: null,
+      hostHeartbeatAt: null
+    });
+  } catch (error) {
+    logStoreError("Failed to clear players", error);
+  }
+}
+
 function claimHostIfStale(roomCode) {
   if (view !== "host" || isHostOwner(state) || !isRaceControlledStatus(state.status) || !isHostStale(state) || hostClaimInFlight) {
     return;
@@ -660,6 +687,9 @@ async function createFirebaseStore() {
     setPlayers(roomCode, players) {
       return update(ref(db, `rooms/${roomCode}/players`), players);
     },
+    clearPlayers(roomCode) {
+      return set(ref(db, `rooms/${roomCode}/players`), null);
+    },
     addClicks(roomCode, id, count) {
       const now = Date.now();
       const bucket = String(Math.floor(now / RECENT_BUCKET_MS) * RECENT_BUCKET_MS);
@@ -706,6 +736,10 @@ function createLocalStore() {
     async setPlayers(roomCode, players) {
       const room = getLocalRoom(roomCode);
       saveLocalRoom(roomCode, { ...room, players: { ...room.players, ...players } });
+    },
+    async clearPlayers(roomCode) {
+      const room = getLocalRoom(roomCode);
+      saveLocalRoom(roomCode, { ...room, players: {} });
     },
     async addClicks(roomCode, id, count) {
       const room = getLocalRoom(roomCode);
